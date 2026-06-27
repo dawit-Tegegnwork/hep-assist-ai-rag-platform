@@ -1,0 +1,2 @@
+"""MediMind backend package."""
+

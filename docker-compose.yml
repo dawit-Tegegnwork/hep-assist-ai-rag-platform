@@ -1,0 +1,28 @@
+services:
+  api:
+    build: .
+    environment:
+      MEDIMIND_DATABASE_URL: postgresql://medimind:medimind@postgres:5432/medimind
+      MEDIMIND_AUDIT_LOG_PATH: /app/audit/audit_logs.jsonl
+    ports:
+      - "8000:8000"
+    volumes:
+      - audit-data:/app/audit
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: medimind
+      POSTGRES_USER: medimind
+      POSTGRES_PASSWORD: medimind
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+volumes:
+  audit-data:
+  postgres-data:
+
