@@ -1,23 +1,24 @@
 from pathlib import Path
+from uuid import UUID
 
+import pytest
 from fastapi.testclient import TestClient
 
 from app.core.config import settings
+from app.db.session import init_db, reset_engine
 from app.main import app
-
 
 client = TestClient(app)
 
 
-def setup_module() -> None:
-    settings.audit_log_path = Path("test_audit_logs.jsonl")
-    if settings.audit_log_path.exists():
-        settings.audit_log_path.unlink()
-
-
-def teardown_module() -> None:
-    if settings.audit_log_path.exists():
-        settings.audit_log_path.unlink()
+@pytest.fixture(autouse=True)
+def test_db(tmp_path, monkeypatch):
+    db_path = tmp_path / "test.db"
+    reset_engine(f"sqlite:///{db_path}")
+    settings.audit_log_path = tmp_path / "audit_logs.jsonl"
+    init_db()
+    yield
+    reset_engine(f"sqlite:///{db_path}")
 
 
 def test_health_check() -> None:
@@ -106,3 +107,76 @@ def test_soap_note_uses_synthetic_guideline_plan() -> None:
     assert body["plan"]
     assert "not medical advice" in body["disclaimer"]
 
+
+def test_create_note_and_extract_workflow() -> None:
+    create = client.post(
+        "/api/v1/notes",
+        json={
+            "title": "Synthetic workflow note",
+            "raw_text": "Synthetic patient with fatigue and hepatitis screening history.",
+            "note_type": "clinical",
+        },
+    )
+    assert create.status_code == 200
+    note_id = create.json()["id"]
+
+    extract = client.post(f"/api/v1/notes/{note_id}/extract")
+    assert extract.status_code == 200
+    body = extract.json()
+    assert body["review_status"] == "pending"
+    assert body["summary"]
+    extraction_id = body["id"]
+
+    review = client.post(
+        f"/api/v1/extractions/{extraction_id}/review",
+        json={"action": "approve", "reviewer_comment": "Synthetic demo approval"},
+    )
+    assert review.status_code == 200
+    assert review.json()["review_status"] == "approved"
+
+
+def test_dashboard_summary_reflects_review_states() -> None:
+    note = client.post(
+        "/api/v1/notes",
+        json={"title": "Dash note", "raw_text": "Synthetic hepatitis follow-up note.", "note_type": "clinical"},
+    ).json()
+    extraction = client.post(f"/api/v1/notes/{note['id']}/extract").json()
+    client.post(
+        f"/api/v1/extractions/{extraction['id']}/review",
+        json={"action": "reject", "reviewer_comment": "Needs edits"},
+    )
+
+    summary = client.get("/api/v1/dashboard/summary")
+    assert summary.status_code == 200
+    data = summary.json()
+    assert data["total_notes"] >= 1
+    assert data["rejected"] >= 1
+
+
+def test_audit_events_are_listed() -> None:
+    client.post(
+        "/api/v1/notes",
+        json={"title": "Audit note", "raw_text": "Synthetic audit trail demo.", "note_type": "clinical"},
+    )
+    response = client.get("/api/v1/audit")
+    assert response.status_code == 200
+    events = response.json()
+    assert any(e["action"] == "note.create" for e in events)
+
+
+def test_get_note_returns_latest_extraction() -> None:
+    note_id = client.post(
+        "/api/v1/notes",
+        json={"title": "Detail note", "raw_text": "Synthetic detail check.", "note_type": "clinical"},
+    ).json()["id"]
+    client.post(f"/api/v1/notes/{note_id}/extract")
+
+    detail = client.get(f"/api/v1/notes/{note_id}")
+    assert detail.status_code == 200
+    assert detail.json()["latest_extraction"] is not None
+
+
+def test_dashboard_page_loads() -> None:
+    response = client.get("/dashboard")
+    assert response.status_code == 200
+    assert "Healthcare AI Workflow Assistant" in response.text

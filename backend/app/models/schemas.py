@@ -1,4 +1,6 @@
 from datetime import UTC, datetime
+from enum import Enum
+from uuid import UUID
 
 from pydantic import BaseModel, Field
 
@@ -55,4 +57,67 @@ class AuditEvent(BaseModel):
     synthetic_only: bool = True
     metadata: dict[str, object] = Field(default_factory=dict)
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+
+class NoteCreateInput(BaseModel):
+    title: str = Field(..., min_length=1, max_length=200)
+    raw_text: str = Field(..., min_length=1, max_length=8000)
+    note_type: str = Field(default="clinical", max_length=50)
+
+
+class NoteResponse(BaseModel):
+    id: UUID
+    title: str
+    raw_text: str
+    note_type: str
+    created_at: datetime
+
+
+class ExtractionResponse(BaseModel):
+    id: UUID
+    note_id: UUID
+    summary: str
+    follow_up_tasks: list[str]
+    risk_flags: list[str]
+    structured_payload: dict[str, object]
+    review_status: str
+    reviewer_comment: str | None
+    reviewed_at: datetime | None
+    provider: str
+    created_at: datetime
+
+
+class NoteDetailResponse(BaseModel):
+    note: NoteResponse
+    latest_extraction: ExtractionResponse | None
+
+
+class ReviewAction(str, Enum):
+    APPROVE = "approve"
+    REJECT = "reject"
+    REQUEST_CHANGES = "request_changes"
+
+
+class ReviewInput(BaseModel):
+    action: ReviewAction
+    reviewer_comment: str | None = Field(default=None, max_length=1000)
+
+
+class DashboardSummary(BaseModel):
+    pending_review: int
+    approved: int
+    rejected: int
+    changes_requested: int
+    total_notes: int
+    total_extractions: int
+
+
+class AuditEventResponse(BaseModel):
+    id: UUID
+    action: str
+    entity_type: str
+    entity_id: str | None
+    synthetic_only: bool
+    metadata: dict[str, object]
+    created_at: datetime
 

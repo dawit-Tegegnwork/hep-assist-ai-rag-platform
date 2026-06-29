@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Healthcare AI Workflow Assistant — Demo Dashboard</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 2rem; background: #f6f8fa; color: #1f2937; }
+    h1 { margin-bottom: 0.25rem; }
+    .muted { color: #6b7280; margin-bottom: 1.5rem; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; }
+    .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; }
+    .card strong { display: block; font-size: 1.75rem; }
+    a { color: #2563eb; }
+    code { background: #eef2ff; padding: 0.1rem 0.35rem; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <h1>Healthcare AI Workflow Assistant</h1>
+  <p class="muted">Synthetic demo dashboard — human review required before any clinical use.</p>
+  <div class="cards" id="summary">Loading summary...</div>
+  <p style="margin-top: 2rem;">
+    API docs: <a href="/docs">/docs</a> ·
+    Create note: <code>POST /api/v1/notes</code> ·
+    Extract: <code>POST /api/v1/notes/{id}/extract</code>
+  </p>
+  <script>
+    fetch('/api/v1/dashboard/summary')
+      .then(r => r.json())
+      .then(data => {
+        const fields = [
+          ['Pending review', data.pending_review],
+          ['Approved', data.approved],
+          ['Rejected', data.rejected],
+          ['Changes requested', data.changes_requested],
+          ['Total notes', data.total_notes],
+          ['Total extractions', data.total_extractions],
+        ];
+        document.getElementById('summary').innerHTML = fields.map(([label, value]) =>
+          `<div class="card"><span>${label}</span><strong>${value}</strong></div>`
+        ).join('');
+      })
+      .catch(() => {
+        document.getElementById('summary').textContent = 'Could not load dashboard summary.';
+      });
+  </script>
+</body>
+</html>

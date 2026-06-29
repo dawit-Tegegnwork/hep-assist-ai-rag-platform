@@ -6,13 +6,14 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    service_name: str = "MediMind HEP Assist AI"
+    service_name: str = "Healthcare AI Workflow Assistant"
     api_prefix: str = "/api/v1"
     audit_log_path: Path = Path("audit_logs.jsonl")
     database_url: str | None = Field(
-        default=None,
-        description="Optional PostgreSQL URL for durable audit logging.",
+        default="sqlite:///./healthcare_ai.db",
+        description="PostgreSQL or SQLite URL for notes, extractions, and audit events.",
     )
+    llm_provider: str = Field(default="mock", description="mock or openai")
 
     model_config = SettingsConfigDict(env_file=".env", env_prefix="MEDIMIND_")
 

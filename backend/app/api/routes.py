@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends
+from sqlmodel import Session
 
 from app.core.config import Settings, get_settings
+from app.db.session import get_session
 from app.models.schemas import (
     AuditEvent,
     ClinicalPreprocessInput,
@@ -18,8 +20,11 @@ from app.services.soap import build_soap_note
 router = APIRouter()
 
 
-def get_audit_logger(settings: Settings = Depends(get_settings)) -> AuditLogger:
-    return AuditLogger(settings=settings)
+def get_audit_logger(
+    settings: Settings = Depends(get_settings),
+    session: Session = Depends(get_session),
+) -> AuditLogger:
+    return AuditLogger(settings=settings, session=session)
 
 
 @router.post("/clinical/preprocess", response_model=ClinicalPreprocessOutput)

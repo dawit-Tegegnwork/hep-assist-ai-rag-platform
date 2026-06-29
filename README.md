@@ -1,35 +1,36 @@
-# MediMind HEP Assist AI
+# Healthcare AI Workflow Assistant
 
-Minimal healthcare AI backend portfolio MVP for FastAPI roles. The app uses only synthetic demo data and does not contain patient data or production clinical claims.
+Synthetic healthcare note assistant with structured AI extraction, human review workflow, audit logging, and a demo dashboard. **Synthetic demo data only** — not for real patient data or clinical decision-making.
 
 [![Tests](https://github.com/dawit-Tegegnwork/medimind-hep-assist-ai/actions/workflows/test.yml/badge.svg)](https://github.com/dawit-Tegegnwork/medimind-hep-assist-ai/actions/workflows/test.yml)
 
-## What it shows
+> **Portfolio note:** This repo will be renamed to `healthcare-ai-workflow-assistant` on GitHub after review. See [docs/RENAME_REPO.md](docs/RENAME_REPO.md).
 
-- FastAPI service with typed Pydantic request and response models
-- Clinical text preprocessing with simple identifier redaction and abbreviation normalization
-- Keyword-based retrieval over synthetic hepatitis guideline snippets loaded from markdown
-- SOAP note draft endpoint with safety disclaimer
-- Audit logging with JSONL fallback (Postgres URL configurable; durable DB writes deferred)
-- Docker Compose with API and PostgreSQL
-- Pytest coverage for main API workflows
+## What it demonstrates
+
+- FastAPI + Pydantic APIs with OpenAPI docs
+- SQLModel persistence (PostgreSQL or SQLite)
+- Mock LLM structured extraction (optional OpenAI-compatible provider)
+- Human review: approve / reject / request changes
+- Audit log stored in database
+- Docker Compose, seed script, pytest coverage
+- Legacy demo endpoints: preprocessing, guideline RAG, SOAP draft
 
 ## Architecture
+
+See [docs/architecture.md](docs/architecture.md).
 
 ```mermaid
 flowchart LR
   Client[Client] --> API[FastAPI]
-  API --> Preprocess[clinical/preprocess]
-  API --> RAG[guidelines/search]
-  API --> SOAP[soap-note]
-  Preprocess --> Audit[AuditLogger_JSONL]
-  RAG --> Guidelines[synthetic_guidelines.md]
-  RAG --> Audit
-  SOAP --> RAG
-  SOAP --> Audit
+  API --> Notes[notes/extract/review]
+  API --> Dash[dashboard]
+  Notes --> DB[(PostgreSQL)]
+  Notes --> LLM[MockLLM]
+  Notes --> Audit[audit_events]
 ```
 
-## Run locally
+## Quick start
 
 ```bash
 python -m venv venv
@@ -39,48 +40,70 @@ cp .env.example .env
 PYTHONPATH=backend uvicorn main:app --app-dir backend --reload
 ```
 
-Open `http://127.0.0.1:8000/docs`.
+Open:
+- API docs: http://127.0.0.1:8000/docs
+- Dashboard: http://127.0.0.1:8000/dashboard
 
-## Run with Docker Compose
+### Seed demo data
+
+```bash
+PYTHONPATH=backend python -m app.scripts.seed
+```
+
+### Docker Compose
 
 ```bash
 docker compose up --build
+PYTHONPATH=backend python -m app.scripts.seed
 ```
 
-The API will be available on `http://127.0.0.1:8000`.
+## API endpoints
 
-## Test
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/health` | Health check |
+| POST | `/api/v1/notes` | Create synthetic note |
+| GET | `/api/v1/notes/{id}` | Note + latest extraction |
+| POST | `/api/v1/notes/{id}/extract` | Run structured extraction |
+| POST | `/api/v1/extractions/{id}/review` | Human review action |
+| GET | `/api/v1/dashboard/summary` | Pending/approved/rejected counts |
+| GET | `/api/v1/audit` | Audit event list |
+| POST | `/api/v1/clinical/preprocess` | Text preprocessing |
+| POST | `/api/v1/guidelines/search` | Synthetic guideline RAG |
+| POST | `/api/v1/soap-note` | SOAP draft (demo) |
+| GET | `/dashboard` | HTML demo dashboard |
+
+## Example workflow
+
+```bash
+# Create note
+curl -X POST http://127.0.0.1:8000/api/v1/notes \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Synthetic follow-up","raw_text":"Synthetic patient with fatigue and hepatitis screening history.","note_type":"clinical"}'
+
+# Extract (use note id from response)
+curl -X POST http://127.0.0.1:8000/api/v1/notes/{NOTE_ID}/extract
+
+# Approve extraction
+curl -X POST http://127.0.0.1:8000/api/v1/extractions/{EXTRACTION_ID}/review \
+  -H "Content-Type: application/json" \
+  -d '{"action":"approve","reviewer_comment":"Demo approval"}'
+```
+
+## Tests
 
 ```bash
 PYTHONPATH=backend pytest
 ```
 
-## Example requests
-
-```bash
-curl -X POST http://127.0.0.1:8000/api/v1/clinical/preprocess \
-  -H "Content-Type: application/json" \
-  -d '{"text":"Synthetic pt hx of SOB. Call +1 555 222 3333."}'
-```
-
-```bash
-curl -X POST http://127.0.0.1:8000/api/v1/guidelines/search \
-  -H "Content-Type: application/json" \
-  -d '{"query":"HCV RNA confirmation","limit":2}'
-```
-
-```bash
-curl -X POST http://127.0.0.1:8000/api/v1/soap-note \
-  -H "Content-Type: application/json" \
-  -d '{"chief_complaint":"Fatigue","history":"Synthetic patient reports hepatitis exposure.","vitals":{"hr":82},"problems":["hepatitis screening"]}'
-```
-
 ## Safety scope
 
-This is a portfolio backend demo. It is not a medical device, does not diagnose or treat disease, and should not be used with real patient data.
+Portfolio demo only. Not a medical device. Does not diagnose or treat. Use synthetic data only. All AI outputs require human review.
 
-## Limitations
+## Optional OpenAI provider
 
-- Guideline retrieval uses keyword scoring, not vector embeddings or an LLM
-- Audit events write to JSONL even when `MEDIMIND_DATABASE_URL` is set
-- All clinical content is synthetic and for demonstration only
+Set `OPENAI_API_KEY` (and optionally `OPENAI_BASE_URL`, `OPENAI_MODEL`). Mock provider is used when unset.
+
+## This project demonstrates (for recruiters)
+
+FastAPI, PostgreSQL/SQLModel, AI workflow design, structured extraction, human-in-the-loop review, audit-friendly records, Docker, and healthcare data safety awareness.
