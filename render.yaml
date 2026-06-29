@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: healthcare-ai-workflow-assistant
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: MEDIMIND_DATABASE_URL
+        value: sqlite:////tmp/healthcare_ai.db
+      - key: PYTHONPATH
+        value: /app/backend

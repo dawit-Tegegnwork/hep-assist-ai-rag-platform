@@ -30,6 +30,21 @@ Applied to `dawit-tegegnwork` repo on GitHub.
 
 All repos pushed. See repo URLs on https://github.com/dawit-Tegegnwork
 
+## Live portfolio site
+
+https://dawit-tegegnwork.github.io/portfolio-website/
+
+GitHub Pages serves from the `docs/` folder on `portfolio-website` master branch.
+
+## Cloud API deploy (Render)
+
+- [healthcare-ai-workflow-assistant — RENDER_DEPLOY.md](https://github.com/dawit-Tegegnwork/healthcare-ai-workflow-assistant/blob/main/docs/RENDER_DEPLOY.md)
+- [enterprise-workflow-management-system — RENDER_DEPLOY.md](https://github.com/dawit-Tegegnwork/enterprise-workflow-management-system/blob/master/docs/RENDER_DEPLOY.md)
+
+## Full status report
+
+See [docs/GITHUB_STATUS_REPORT.md](GITHUB_STATUS_REPORT.md) in healthcare-ai-workflow-assistant.
+
 ## Interview story prompts
 
 For each project prepare: problem, stack choice, data model, API design, privacy, one tradeoff, deploy/monitor approach.

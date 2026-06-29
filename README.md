@@ -4,6 +4,8 @@ Synthetic healthcare note assistant with structured AI extraction, human review 
 
 [![Tests](https://github.com/dawit-Tegegnwork/healthcare-ai-workflow-assistant/actions/workflows/test.yml/badge.svg)](https://github.com/dawit-Tegegnwork/healthcare-ai-workflow-assistant/actions/workflows/test.yml)
 
+**Requirements:** Python 3.12+
+
 ## What it demonstrates
 
 - FastAPI + Pydantic APIs with OpenAPI docs
@@ -103,6 +105,15 @@ PYTHONPATH=backend pytest
 ## Safety scope
 
 Portfolio demo only. Not a medical device. Does not diagnose or treat. Use synthetic data only. All AI outputs require human review.
+
+## Try live / Run locally
+
+| | |
+|---|---|
+| **Live demo** | Deploy via [Render](docs/RENDER_DEPLOY.md) (free tier) or run locally below |
+| **Local** | `docker compose up --build` then seed demo data |
+
+See [docs/RENDER_DEPLOY.md](docs/RENDER_DEPLOY.md) for one-click cloud deployment.
 
 ## Optional OpenAI provider
 
