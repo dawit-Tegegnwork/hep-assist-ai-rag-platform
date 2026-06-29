@@ -14,3 +14,4 @@ build/
 htmlcov/
 audit_logs/
 test_audit_logs.jsonl
+*.db
