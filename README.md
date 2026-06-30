@@ -6,6 +6,13 @@ Synthetic healthcare note assistant with structured AI extraction, human review 
 
 **Requirements:** Python 3.12+
 
+## Demo scenario (3–5 minutes)
+
+1. `docker compose up --build` — demo notes auto-seed on startup
+2. Open http://127.0.0.1:8000/dashboard — review note list and review statuses
+3. Open http://127.0.0.1:8000/docs — run extract + review on a pending note
+4. `GET /api/v1/audit` — confirm audit events
+
 ## What it demonstrates
 
 - FastAPI + Pydantic APIs with OpenAPI docs

@@ -8,40 +8,82 @@
     body { font-family: system-ui, sans-serif; margin: 2rem; background: #f6f8fa; color: #1f2937; }
     h1 { margin-bottom: 0.25rem; }
     .muted { color: #6b7280; margin-bottom: 1.5rem; }
-    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
     .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; }
-    .card strong { display: block; font-size: 1.75rem; }
+    .card strong { display: block; font-size: 1.5rem; }
+    table { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; }
+    th, td { text-align: left; padding: 0.75rem 1rem; border-bottom: 1px solid #e5e7eb; font-size: 0.9rem; }
+    th { background: #f9fafb; font-weight: 600; }
+    .badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
+    .pending { background: #fef3c7; color: #92400e; }
+    .approved { background: #d1fae5; color: #065f46; }
+    .rejected { background: #fee2e2; color: #991b1b; }
+    .changes { background: #e0e7ff; color: #3730a3; }
+    .none { background: #f3f4f6; color: #6b7280; }
     a { color: #2563eb; }
     code { background: #eef2ff; padding: 0.1rem 0.35rem; border-radius: 4px; }
   </style>
 </head>
 <body>
   <h1>Healthcare AI Workflow Assistant</h1>
-  <p class="muted">Synthetic demo dashboard — human review required before any clinical use.</p>
+  <p class="muted">Portfolio demo — synthetic clinical notes only. Human review required before any clinical use.</p>
   <div class="cards" id="summary">Loading summary...</div>
+  <h2>Recent notes</h2>
+  <table>
+    <thead>
+      <tr><th>Title</th><th>Type</th><th>Review status</th><th>Created</th></tr>
+    </thead>
+    <tbody id="notes"><tr><td colspan="4">Loading notes...</td></tr></tbody>
+  </table>
   <p style="margin-top: 2rem;">
-    API docs: <a href="/docs">/docs</a> ·
-    Create note: <code>POST /api/v1/notes</code> ·
-    Extract: <code>POST /api/v1/notes/{id}/extract</code>
+    <a href="/docs">API documentation</a> ·
+  <code>POST /api/v1/notes</code> ·
+  <code>POST /api/v1/notes/{id}/extract</code> ·
+  <code>POST /api/v1/extractions/{id}/review</code>
   </p>
   <script>
+    function badgeClass(status) {
+      if (!status) return 'none';
+      if (status === 'pending') return 'pending';
+      if (status === 'approved') return 'approved';
+      if (status === 'rejected') return 'rejected';
+      return 'changes';
+    }
     fetch('/api/v1/dashboard/summary')
       .then(r => r.json())
       .then(data => {
         const fields = [
-          ['Pending review', data.pending_review],
+          ['Pending', data.pending_review],
           ['Approved', data.approved],
           ['Rejected', data.rejected],
-          ['Changes requested', data.changes_requested],
-          ['Total notes', data.total_notes],
-          ['Total extractions', data.total_extractions],
+          ['Changes', data.changes_requested],
+          ['Notes', data.total_notes],
         ];
         document.getElementById('summary').innerHTML = fields.map(([label, value]) =>
           `<div class="card"><span>${label}</span><strong>${value}</strong></div>`
         ).join('');
+      });
+    fetch('/api/v1/notes')
+      .then(r => r.json())
+      .then(notes => {
+        if (!notes.length) {
+          document.getElementById('notes').innerHTML = '<tr><td colspan="4">No notes yet.</td></tr>';
+          return;
+        }
+        document.getElementById('notes').innerHTML = notes.map(item => {
+          const status = item.latest_extraction ? item.latest_extraction.review_status : null;
+          const label = status || 'no extraction';
+          const created = new Date(item.note.created_at).toLocaleString();
+          return `<tr>
+            <td>${item.note.title}</td>
+            <td>${item.note.note_type}</td>
+            <td><span class="badge ${badgeClass(status)}">${label}</span></td>
+            <td>${created}</td>
+          </tr>`;
+        }).join('');
       })
       .catch(() => {
-        document.getElementById('summary').textContent = 'Could not load dashboard summary.';
+        document.getElementById('notes').innerHTML = '<tr><td colspan="4">Could not load notes.</td></tr>';
       });
   </script>
 </body>

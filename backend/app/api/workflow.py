@@ -1,7 +1,10 @@
+import logging
 from datetime import UTC, datetime
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
+
+logger = logging.getLogger(__name__)
 from sqlmodel import Session, func, select
 
 from app.core.config import Settings, get_settings
@@ -72,6 +75,25 @@ def create_note(
         entity_id=str(note.id),
     )
     return _note_response(note)
+
+
+@router.get("/notes", response_model=list[NoteDetailResponse])
+def list_notes(session: Session = Depends(get_session)) -> list[NoteDetailResponse]:
+    notes = session.exec(select(ClinicalNote).order_by(ClinicalNote.created_at.desc())).all()
+    results: list[NoteDetailResponse] = []
+    for note in notes:
+        extraction = session.exec(
+            select(Extraction)
+            .where(Extraction.note_id == note.id)
+            .order_by(Extraction.created_at.desc())
+        ).first()
+        results.append(
+            NoteDetailResponse(
+                note=_note_response(note),
+                latest_extraction=_extraction_response(extraction) if extraction else None,
+            )
+        )
+    return results
 
 
 @router.get("/notes/{note_id}", response_model=NoteDetailResponse)
@@ -158,6 +180,12 @@ def review_extraction(
         ),
         entity_type="extraction",
         entity_id=str(extraction.id),
+    )
+    logger.info(
+        "extraction reviewed id=%s action=%s status=%s",
+        extraction.id,
+        payload.action.value,
+        extraction.review_status.value,
     )
     return _extraction_response(extraction)
 
