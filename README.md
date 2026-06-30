@@ -6,6 +6,58 @@ Synthetic healthcare note assistant with structured AI extraction, human review 
 
 **Requirements:** Python 3.12+
 
+This is a **production-style portfolio project** using **synthetic data only**. It demonstrates architecture, workflows, testing, and deployment practices expected in real backend/product systems — not a deployed clinical production system.
+
+## Live Demo
+
+| Channel | URL |
+|---------|-----|
+| **Cloud live demo** | Coming soon — [one-click Render deploy](docs/RENDER_DEPLOY.md) |
+| **Local** | `http://127.0.0.1:8000` after `docker compose up --build` |
+| **Portfolio site** | https://dawit-tegegnwork.github.io/portfolio-website/ |
+
+## Quick Test in 3 Minutes
+
+```bash
+docker compose up --build
+curl http://localhost:8000/health
+```
+
+1. Open http://localhost:8000/ — landing page with test steps  
+2. Open http://localhost:8000/dashboard — seeded notes and review statuses  
+3. Open http://localhost:8000/docs — extract + review a pending note  
+4. `curl http://localhost:8000/api/v1/audit` — confirm audit events  
+
+## Production-Style Features
+
+- `/health` JSON liveness check  
+- `/` landing page with recruiter test path  
+- Auto-seed synthetic demo data on startup  
+- HTML operations dashboard  
+- OpenAPI docs at `/docs`  
+- Docker Compose with Postgres healthcheck  
+- GitHub Actions CI (pytest)  
+- Render deployment blueprint  
+
+## Health Check
+
+```bash
+curl http://localhost:8000/health
+# {"status":"ok","service":"Healthcare AI Workflow Assistant"}
+```
+
+## Synthetic Data Notice
+
+All clinical notes, extractions, and audit events are **synthetic**. This project is not for real patient data, not a medical device, and does not diagnose or treat. Human review is required before any clinical use of AI outputs.
+
+## What Recruiters Can Evaluate
+
+- FastAPI + SQLModel API design  
+- Human-in-the-loop AI workflow (extract → review → audit)  
+- Structured logging and audit-friendly records  
+- Docker, CI, and deployment-ready layout  
+- Healthcare data safety awareness  
+
 ## Demo scenario (3–5 minutes)
 
 1. `docker compose up --build` — demo notes auto-seed on startup

@@ -36,6 +36,11 @@ def create_app() -> FastAPI:
     def health_check() -> dict[str, str]:
         return {"status": "ok", "service": settings.service_name}
 
+    @app.get("/", response_class=HTMLResponse)
+    def landing() -> str:
+        template_path = Path(__file__).parent / "static" / "landing.html"
+        return template_path.read_text(encoding="utf-8")
+
     @app.get("/dashboard", response_class=HTMLResponse)
     def dashboard() -> str:
         template_path = Path(__file__).parent / "static" / "dashboard.html"

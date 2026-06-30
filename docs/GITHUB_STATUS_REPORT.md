@@ -14,7 +14,30 @@
 | Total automated tests | 55+ passing locally |
 | CI workflows | All 6 repos |
 | Live portfolio site | https://dawit-tegegnwork.github.io/portfolio-website/ |
-| Cloud deploy blueprints | healthcare-ai + enterprise-workflow (Render) |
+| Cloud deploy blueprints | healthcare-ai, enterprise-workflow, cpims, runbook-lab (Render) |
+| Production-style README sections | All 7 repos (live demo, 3-min test, health check) |
+
+---
+
+## Production-style polish (2026-06-29)
+
+All pinned repos + portfolio site now include standardized README sections:
+
+- **Live Demo** — real GitHub Pages URL for portfolio; cloud demos marked “coming soon” (no invented URLs)
+- **Quick Test in 3 Minutes** — `docker compose up` + `curl /health` paths
+- **Production-Style Features**, **Health Check**, **Synthetic Data Notice**, **What Recruiters Can Evaluate**
+
+API repos expose `/health` JSON and `/` landing pages with links to `/docs`, dashboards/boards, and GitHub.
+
+| Repo | `/health` | Landing `/` | Live demo |
+|------|-----------|-------------|-----------|
+| healthcare-ai | Yes | Yes | Coming soon (Render) |
+| enterprise-workflow | Yes | Yes | Coming soon (Render) |
+| golang-transaction-api | Yes | Yes | Coming soon |
+| node-firebase-mobile-backend | Emulator only | N/A | Local emulator |
+| cpims | Yes (+ `/api/v1/health`) | Yes | Coming soon (Render) |
+| runbook-lab | Yes (+ `/api/health`) | Yes + `/board` | Coming soon (Render) |
+| portfolio-website | Static build check | N/A | **Live** on GitHub Pages |
 
 ---
 

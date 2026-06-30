@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Healthcare AI Workflow Assistant</title>
+  <style>
+    body { margin: 0; font-family: system-ui, sans-serif; background: #f8fafc; color: #0f172a; line-height: 1.6; }
+    main { max-width: 820px; margin: 0 auto; padding: 2.5rem 1.25rem; }
+    .notice { background: #ecfdf5; border: 1px solid #6ee7b7; color: #065f46; padding: 1rem; border-radius: 8px; margin: 1rem 0; }
+    .links a { display: inline-block; margin: 0.35rem 0.75rem 0.35rem 0; color: #0369a1; font-weight: 600; }
+    ol { padding-left: 1.25rem; }
+    code { background: #e2e8f0; padding: 0.1rem 0.35rem; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Healthcare AI Workflow Assistant</h1>
+    <p>Production-style portfolio project — synthetic clinical notes, structured extraction, human review, audit logs.</p>
+    <div class="notice"><strong>Synthetic data only.</strong> Not for real patients. Not a medical device. Human review required.</div>
+    <div class="links">
+      <a href="/docs">API docs</a>
+      <a href="/health">Health check</a>
+      <a href="/dashboard">Dashboard</a>
+      <a href="https://github.com/dawit-Tegegnwork/healthcare-ai-workflow-assistant">GitHub</a>
+    </div>
+    <h2>Quick test (3 minutes)</h2>
+    <ol>
+      <li>Confirm <a href="/health">/health</a> returns <code>{"status":"ok"}</code></li>
+      <li>Open <a href="/dashboard">/dashboard</a> — seeded notes and review statuses</li>
+      <li>Use <a href="/docs">/docs</a> to extract and review a pending note</li>
+      <li>Call <code>GET /api/v1/audit</code> to verify audit events</li>
+    </ol>
+  </main>
+</body>
+</html>
