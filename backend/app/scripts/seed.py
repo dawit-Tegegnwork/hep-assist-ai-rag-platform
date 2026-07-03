@@ -1,10 +1,11 @@
-"""Seed synthetic demo notes for portfolio demos."""
+"""Seed synthetic demo notes and health-worker Q&A data for portfolio demos."""
 
 from sqlmodel import Session, select
 
-from app.db.models import ClinicalNote, Extraction, ReviewStatus
+from app.db.models import AIAnswer, ClinicalNote, Extraction, HealthQuestion, ReviewStatus
 from app.db.session import get_engine, init_db
 from app.services.llm import MockLLMProvider
+from app.services.vector_store import VectorStore
 
 DEMO_NOTES = [
     {
@@ -37,18 +38,142 @@ DEMO_NOTES = [
     },
 ]
 
+DEMO_QUESTIONS = [
+    {
+        "question_text": "What screening tests are approved for hepatitis B in community settings?",
+        "language": "en",
+        "review_status": ReviewStatus.PENDING,
+    },
+    {
+        "question_text": "How should I refer a patient with abnormal liver panels?",
+        "language": "en",
+        "review_status": ReviewStatus.APPROVED,
+    },
+    {
+        "question_text": "What triage checklist should I use when connectivity is poor?",
+        "language": "en",
+        "review_status": ReviewStatus.REJECTED,
+    },
+    {
+        "question_text": "How do I document vaccination education without giving medical advice?",
+        "language": "en",
+        "review_status": ReviewStatus.PENDING,
+    },
+    {
+        "question_text": "የሂፓታይቲስ B ምርመራ በcommunity setting እንዴት ይደረጋል?",
+        "language": "am",
+        "review_status": ReviewStatus.PENDING,
+    },
+    {
+        "question_text": "What PPE should health workers use during field visits?",
+        "language": "en",
+        "review_status": ReviewStatus.APPROVED,
+    },
+    {
+        "question_text": "How should I queue questions when offline?",
+        "language": "en",
+        "review_status": ReviewStatus.CHANGES_REQUESTED,
+    },
+    {
+        "question_text": "When should I escalate jaundice cases to a clinician?",
+        "language": "en",
+        "review_status": ReviewStatus.PENDING,
+    },
+]
+
+
+def _generate_demo_answer(
+    provider: MockLLMProvider,
+    question: HealthQuestion,
+    session: Session,
+) -> AIAnswer:
+    from app.core.config import get_settings
+    from app.services.rag import VectorRetriever
+    from app.services.safety import assess_question, assess_retrieval
+
+    question_safety = assess_question(question.question_text, question.language)
+    if question_safety.refused:
+        return AIAnswer(
+            question_id=question.id,
+            answer_text="Refused: unsafe question for demo assistant.",
+            citations=[],
+            risk_flags=question_safety.risk_flags,
+            hallucination_flags=[],
+            refused=True,
+            refusal_reason=question_safety.refusal_reason,
+            review_status=ReviewStatus.PENDING,
+            retrieval_scores=[],
+            approved_content_only=question.approved_content_only,
+            provider="mock",
+        )
+
+    settings = get_settings()
+    retriever = VectorRetriever(session)
+    search_language = question.language if question.language in {"en", "am"} else None
+    search_result = retriever.search(
+        question.question_text,
+        limit=settings.retrieval_top_k,
+        language=search_language,
+        min_score=0.0,
+    )
+    retrieval_safety = assess_retrieval(
+        search_result.matches,
+        approved_content_only=question.approved_content_only,
+    )
+    if retrieval_safety.refused:
+        return AIAnswer(
+            question_id=question.id,
+            answer_text="No approved content match found.",
+            citations=[],
+            risk_flags=retrieval_safety.risk_flags,
+            hallucination_flags=[],
+            refused=True,
+            refusal_reason=retrieval_safety.refusal_reason,
+            review_status=ReviewStatus.PENDING,
+            retrieval_scores=[m.score for m in search_result.matches],
+            approved_content_only=question.approved_content_only,
+            provider="mock",
+        )
+
+    llm_result = provider.answer_question(
+        question.question_text,
+        question.language,
+        search_result.matches,
+        approved_content_only=question.approved_content_only,
+    )
+    return AIAnswer(
+        question_id=question.id,
+        answer_text=llm_result.get("answer_text", ""),
+        citations=llm_result.get("citations", []),
+        risk_flags=llm_result.get("risk_flags", []),
+        hallucination_flags=llm_result.get("hallucination_flags", []),
+        refused=bool(llm_result.get("refused", False)),
+        refusal_reason=llm_result.get("refusal_reason"),
+        review_status=ReviewStatus.PENDING,
+        retrieval_scores=[m.score for m in search_result.matches],
+        approved_content_only=question.approved_content_only,
+        provider="mock",
+    )
+
 
 def seed(force: bool = False) -> int:
     init_db()
     created = 0
     provider = MockLLMProvider()
     with Session(get_engine()) as session:
+        store = VectorStore(session)
+        store.index_all(force=force)
+
         existing = session.exec(select(ClinicalNote)).first()
         if existing and not force:
             print("Demo data already exists. Use --force to reseed.")
             return 0
 
         if force:
+            for answer in session.exec(select(AIAnswer)).all():
+                session.delete(answer)
+            for question in session.exec(select(HealthQuestion)).all():
+                session.delete(question)
             for extraction in session.exec(select(Extraction)).all():
                 session.delete(extraction)
             for note in session.exec(select(ClinicalNote)).all():
@@ -79,8 +204,24 @@ def seed(force: bool = False) -> int:
                 provider="mock",
             )
             session.add(extraction)
+
+        for item in DEMO_QUESTIONS:
+            data = dict(item)
+            review_status = data.pop("review_status")
+            question = HealthQuestion(**data)
+            session.add(question)
+            session.commit()
+            session.refresh(question)
+            created += 1
+
+            answer = _generate_demo_answer(provider, question, session)
+            answer.review_status = review_status
+            if review_status != ReviewStatus.PENDING:
+                answer.reviewer_comment = "Synthetic seed review state"
+            session.add(answer)
+
         session.commit()
-    print(f"Seeded {created} synthetic notes.")
+    print(f"Seeded {created} synthetic records (notes + questions).")
     return created
 
 
