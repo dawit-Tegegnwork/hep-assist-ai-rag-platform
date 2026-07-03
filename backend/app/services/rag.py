@@ -3,6 +3,8 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
+from sqlmodel import Session
+
 from app.models.schemas import GuidelineChunk, GuidelineSearchOutput
 
 GUIDELINES_PATH = Path(__file__).resolve().parent.parent / "data" / "synthetic_guidelines.md"
@@ -32,7 +34,7 @@ def load_guidelines_from_markdown(path: Path = GUIDELINES_PATH) -> list[Guidelin
                     GuidelineDocument(
                         id=_slugify(current_title),
                         title=current_title,
-                        source="Synthetic HEP demo guideline v0.1",
+                        source="Synthetic HEP demo guideline v0.2",
                         summary=" ".join(summary_lines).strip(),
                     )
                 )
@@ -47,7 +49,7 @@ def load_guidelines_from_markdown(path: Path = GUIDELINES_PATH) -> list[Guidelin
             GuidelineDocument(
                 id=_slugify(current_title),
                 title=current_title,
-                source="Synthetic HEP demo guideline v0.1",
+                source="Synthetic HEP demo guideline v0.2",
                 summary=" ".join(summary_lines).strip(),
             )
         )
@@ -65,7 +67,7 @@ def _fallback_guidelines() -> list[GuidelineDocument]:
         GuidelineDocument(
             id="hep-b-screening",
             title="Hepatitis B Screening",
-            source="Synthetic HEP demo guideline v0.1",
+            source="Synthetic HEP demo guideline v0.2",
             summary=(
                 "Screen synthetic adult profiles with liver risk factors using HBsAg, "
                 "anti-HBs, and anti-HBc. Confirm positives with follow-up testing."
@@ -74,7 +76,7 @@ def _fallback_guidelines() -> list[GuidelineDocument]:
         GuidelineDocument(
             id="hep-c-testing",
             title="Hepatitis C Testing",
-            source="Synthetic HEP demo guideline v0.1",
+            source="Synthetic HEP demo guideline v0.2",
             summary=(
                 "Offer one-time HCV antibody screening in adult synthetic scenarios, "
                 "then reflex to RNA confirmation before documenting active infection."
@@ -104,6 +106,7 @@ class GuidelineRetriever:
                 source=doc.source,
                 summary=doc.summary,
                 score=round(score, 3),
+                language="en",
             )
             for score, doc in scored[:limit]
             if score > 0
@@ -116,9 +119,36 @@ class GuidelineRetriever:
                     source=self.documents[0].source,
                     summary=self.documents[0].summary,
                     score=0.0,
+                    language="en",
                 )
             ]
         return GuidelineSearchOutput(query=query, matches=matches)
+
+
+class VectorRetriever:
+    """Vector search with keyword fallback for legacy compatibility."""
+
+    def __init__(self, session: Session) -> None:
+        self.session = session
+        self._keyword = GuidelineRetriever()
+
+    def search(
+        self,
+        query: str,
+        *,
+        limit: int = 3,
+        language: str | None = None,
+        min_score: float = 0.0,
+    ) -> GuidelineSearchOutput:
+        from app.services.vector_store import VectorStore
+
+        store = VectorStore(self.session)
+        matches = store.search(query, limit=limit, language=language, min_score=min_score)
+        if matches:
+            return GuidelineSearchOutput(query=query, matches=matches)
+
+        fallback = self._keyword.search(query, limit=limit)
+        return fallback
 
 
 def _tokenize(text: str) -> set[str]:
