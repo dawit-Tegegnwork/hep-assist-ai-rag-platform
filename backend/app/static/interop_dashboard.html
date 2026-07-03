@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Healthcare Interoperability Lab — Dashboard</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --surface: #fff;
+      --ink: #1a2b3c;
+      --muted: #5c6b7a;
+      --blue: #2563eb;
+      --green: #059669;
+      --red: #dc2626;
+      --amber: #d97706;
+      --border: #dbe3ee;
+    }
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; margin: 0; background: var(--bg); color: var(--ink); }
+    .banner {
+      background: #eff6ff;
+      border-bottom: 1px solid #93c5fd;
+      color: #1e3a8a;
+      padding: 0.7rem 1.5rem;
+      font-size: 0.88rem;
+    }
+    main { max-width: 1100px; margin: 0 auto; padding: 1.75rem 1.25rem 2.5rem; }
+    h1 { margin: 0 0 0.25rem; font-size: 1.7rem; }
+    .muted { color: var(--muted); margin-bottom: 1.25rem; max-width: 720px; line-height: 1.5; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0.85rem; margin-bottom: 1.5rem; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1rem; }
+    .card span { display: block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 0.35rem; }
+    .card strong { font-size: 1.9rem; line-height: 1; }
+    .card.failed strong { color: var(--red); }
+    .card.exports strong { color: var(--green); }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 800px) { .grid-2 { grid-template-columns: 1fr; } }
+    table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+    th, td { padding: 0.7rem 0.9rem; border-bottom: 1px solid var(--border); text-align: left; font-size: 0.86rem; }
+    th { background: #eef2f7; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+    tr:last-child td { border-bottom: none; }
+    .pill { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 999px; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; }
+    .pill-pass { background: #d1fae5; color: var(--green); }
+    .pill-fail { background: #fee2e2; color: var(--red); }
+    .pill-info { background: #dbeafe; color: var(--blue); }
+    a { color: var(--blue); font-weight: 600; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    code { background: #eef2f7; padding: 0.1rem 0.35rem; border-radius: 4px; font-size: 0.82rem; }
+    .sources { margin: 0; padding-left: 1.1rem; color: var(--muted); font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <div class="banner">
+    <strong>Synthetic interoperability lab only.</strong>
+    Not connected to OpenMRS, OpenELIS, DHIS2, Bahmni, or live hospital systems. No real patient data.
+  </div>
+  <main>
+    <h1>Healthcare Interoperability Modernization Lab</h1>
+    <p class="muted">
+      Integration and customization exercise by Dawit — validates, transforms, audits, and exports
+      synthetic payloads inspired by open-source digital health ecosystems (OpenMRS, OpenELIS, DHIS2, FHIR).
+    </p>
+    <div class="cards" id="summary">Loading...</div>
+    <div class="grid-2">
+      <div>
+        <h2 style="font-size:1.05rem;margin:0 0 0.6rem;">Messages by source</h2>
+        <ul class="sources" id="by-source"><li>Loading...</li></ul>
+      </div>
+      <div>
+        <h2 style="font-size:1.05rem;margin:0 0 0.6rem;">Quick API calls</h2>
+        <ul class="sources">
+          <li><code>GET /api/v1/interop/samples/openmrs</code></li>
+          <li><code>POST /api/v1/interop/ingest/openmrs</code></li>
+          <li><code>POST /api/v1/interop/messages/{id}/export</code></li>
+          <li><a href="/docs#/interop">OpenAPI — interop tag</a></li>
+        </ul>
+      </div>
+    </div>
+    <h2 style="font-size:1.05rem;margin:1.25rem 0 0.6rem;">Latest audit events</h2>
+    <table>
+      <thead><tr><th>Time</th><th>Action</th><th>Source</th><th>Status</th></tr></thead>
+      <tbody id="events"><tr><td colspan="4">Loading...</td></tr></tbody>
+    </table>
+    <p style="margin-top:1.25rem;font-size:0.9rem;">
+      <a href="/">Home</a> ·
+      <a href="/docs">API docs</a> ·
+      <a href="/interop-lab/README.md">Lab README</a> (repo)
+    </p>
+  </main>
+  <script>
+    const pill = (action) => {
+      if ((action || '').includes('fail')) return 'pill-fail';
+      if ((action || '').includes('export') || (action || '').includes('pass') || (action || '').includes('transform')) return 'pill-pass';
+      return 'pill-info';
+    };
+    fetch('/api/v1/interop/dashboard/stats')
+      .then(r => r.json())
+      .then(data => {
+        document.getElementById('summary').innerHTML = [
+          ['Total messages', data.total_messages, ''],
+          ['Failed validations', data.failed_validations, 'failed'],
+          ['Successful exports', data.successful_exports, 'exports'],
+        ].map(([label, value, cls]) =>
+          `<div class="card ${cls}"><span>${label}</span><strong>${value}</strong></div>`
+        ).join('');
+        const src = data.by_source || {};
+        const keys = Object.keys(src);
+        document.getElementById('by-source').innerHTML = keys.length
+          ? keys.map(k => `<li><strong>${k}</strong>: ${src[k]}</li>`).join('')
+          : '<li>No messages yet — ingest a sample payload.</li>';
+        const events = data.latest_events || [];
+        document.getElementById('events').innerHTML = events.length
+          ? events.map(e => `<tr>
+              <td>${(e.created_at || '').replace('T', ' ').slice(0, 19)}</td>
+              <td><span class="pill ${pill(e.action)}">${e.action}</span></td>
+              <td>${e.source || '—'}</td>
+              <td>${e.status || '—'}</td>
+            </tr>`).join('')
+          : '<tr><td colspan="4">No audit events yet.</td></tr>';
+      })
+      .catch(() => {
+        document.getElementById('summary').textContent = 'Failed to load dashboard stats.';
+      });
+  </script>
+</body>
+</html>

@@ -4,8 +4,6 @@ import os
 import re
 from abc import ABC, abstractmethod
 
-import numpy as np
-
 from app.core.config import get_settings
 
 _TOKEN_PATTERN = re.compile(r"[^\W_]+", re.UNICODE)
@@ -107,9 +105,12 @@ def reset_embedding_provider() -> None:
 
 
 def cosine_similarity(a: list[float], b: list[float]) -> float:
-    va = np.array(a, dtype=np.float32)
-    vb = np.array(b, dtype=np.float32)
-    denom = float(np.linalg.norm(va) * np.linalg.norm(vb))
+    if not a or not b or len(a) != len(b):
+        return 0.0
+    dot = sum(x * y for x, y in zip(a, b, strict=True))
+    norm_a = math.sqrt(sum(x * x for x in a))
+    norm_b = math.sqrt(sum(y * y for y in b))
+    denom = norm_a * norm_b
     if denom == 0.0:
         return 0.0
-    return float(np.dot(va, vb) / denom)
+    return dot / denom

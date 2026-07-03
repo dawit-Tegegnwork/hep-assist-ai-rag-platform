@@ -1,0 +1,27 @@
+{
+  "resourceType": "Bundle",
+  "type": "collection",
+  "id": "bundle-synthetic-001",
+  "entry": [
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "fhir-patient-001-synthetic",
+        "name": [{"family": "Tadesse", "given": ["Helen"]}],
+        "gender": "female",
+        "birthDate": "1988-07-22"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-001-synthetic",
+        "status": "final",
+        "code": {"text": "Hemoglobin"},
+        "subject": {"reference": "Patient/fhir-patient-001-synthetic"},
+        "effectiveDateTime": "2025-06-11T14:00:00",
+        "valueQuantity": {"value": 13.2, "unit": "g/dL"}
+      }
+    }
+  ]
+}

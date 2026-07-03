@@ -4,11 +4,12 @@ Captured from the live demo UI (synthetic data only).
 
 | File | Page | URL |
 |------|------|-----|
+| `home.png` | HEP Assist home + interview script | http://localhost:5173/ |
 | `ask.png` | Ask question form | http://localhost:5173/ask |
 | `answer.png` | Answer with citations | After submitting a question |
 | `review.png` | Human review dashboard | http://localhost:5173/review |
-| `evaluation.png` | Evaluation dashboard | http://localhost:5173/evaluation |
-| `dashboard.png` | Legacy HTML dashboard | http://localhost:8000/dashboard |
+| `evaluation.png` | Evaluation pass/fail dashboard | http://localhost:5173/evaluation |
+| `audit.png` | Audit event log | http://localhost:5173/audit |
 | `swagger.png` | OpenAPI docs | http://localhost:8000/docs |
 
 ## Recapture

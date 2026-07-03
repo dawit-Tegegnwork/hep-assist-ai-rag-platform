@@ -1,0 +1,15 @@
+{
+  "accessionNumber": "LAB-SYN-2025-0001",
+  "patientId": "patient-001-synthetic",
+  "collectionDate": "2025-06-11",
+  "testResults": [
+    {
+      "testCode": "HGB",
+      "testName": "Hemoglobin",
+      "resultValue": "13.2",
+      "resultUnit": "g/dL",
+      "resultDateTime": "2025-06-11T14:00:00",
+      "status": "final"
+    }
+  ]
+}

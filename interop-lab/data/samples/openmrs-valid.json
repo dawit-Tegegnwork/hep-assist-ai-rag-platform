@@ -1,0 +1,21 @@
+{
+  "uuid": "patient-001-synthetic",
+  "identifiers": [{"identifierType": "OpenMRS ID", "identifier": "SYN-OMRS-001"}],
+  "person": {
+    "givenName": "Abebe",
+    "familyName": "Kebede",
+    "birthdate": "1990-03-15",
+    "gender": "M"
+  },
+  "encounters": [
+    {
+      "uuid": "encounter-001-synthetic",
+      "encounterType": "Outpatient",
+      "encounterDatetime": "2025-06-10T09:30:00",
+      "obs": [
+        {"concept": "5089AAAAAAAAAAAAAAAAAAAAAAAAAAAA", "value": "36.5", "obsDatetime": "2025-06-10T09:35:00"},
+        {"concept": "5085AAAAAAAAAAAAAAAAAAAAAAAAAAAA", "value": "120/80", "obsDatetime": "2025-06-10T09:36:00"}
+      ]
+    }
+  ]
+}

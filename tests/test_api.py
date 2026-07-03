@@ -15,7 +15,7 @@ def test_health_check() -> None:
     assert response.status_code == 200
     body = response.json()
     assert body["status"] == "ok"
-    assert body["service"] == "eRIS Modernization Lab"
+    assert body["service"] == "Community Health AI Modernization Lab"
 
 
 def test_preprocess_redacts_identifiers_and_expands_abbreviations() -> None:

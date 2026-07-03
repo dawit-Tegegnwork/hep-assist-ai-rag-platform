@@ -1,0 +1,9 @@
+{
+  "dataSet": "HIV_MONTHLY_SYNTHETIC",
+  "orgUnit": "OU-ADDIS-DEMO",
+  "period": "202506",
+  "dataValues": [
+    {"dataElement": "DE_NEW_HIV_POS", "value": 42, "categoryOptionCombo": "default"},
+    {"dataElement": "DE_ART_STARTED", "value": 38}
+  ]
+}

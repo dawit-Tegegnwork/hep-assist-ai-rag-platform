@@ -5,9 +5,9 @@ services:
       MEDIMIND_ENVIRONMENT: production
       MEDIMIND_DATABASE_URL: postgresql://medimind:medimind@postgres:5432/medimind
       MEDIMIND_AUDIT_LOG_PATH: /app/audit/audit_logs.jsonl
-      MEDIMIND_EMBEDDING_PROVIDER: fastembed
+      MEDIMIND_EMBEDDING_PROVIDER: mock
       MEDIMIND_AUTO_SEED_ON_STARTUP: "true"
-      MEDIMIND_CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
+      MEDIMIND_CORS_ORIGINS: '["http://localhost:5173","http://127.0.0.1:5173"]'
       MEDIMIND_FRONTEND_URL: http://localhost:5173
       MEDIMIND_LOG_LEVEL: INFO
       MEDIMIND_RATE_LIMIT_ENABLED: "true"
@@ -19,7 +19,7 @@ services:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health/ready"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/ready')"]
       interval: 15s
       timeout: 5s
       retries: 5

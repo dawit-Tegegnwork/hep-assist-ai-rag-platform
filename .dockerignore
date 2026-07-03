@@ -1,0 +1,13 @@
+.git
+.pytest_cache
+__pycache__
+*.pyc
+.venv
+venv
+frontend/node_modules
+frontend/dist
+frontend/.vite
+docs/screenshots/*.png
+audit_logs.jsonl
+*.db
+*.sqlite

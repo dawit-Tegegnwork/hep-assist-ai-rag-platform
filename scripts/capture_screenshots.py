@@ -23,8 +23,9 @@ PAGES = [
     ("answer.png", "http://127.0.0.1:5173/ask"),
     ("review.png", "http://127.0.0.1:5173/review"),
     ("evaluation.png", "http://127.0.0.1:5173/evaluation"),
+    ("audit.png", "http://127.0.0.1:5173/audit"),
+    ("home.png", "http://127.0.0.1:5173/"),
     ("swagger.png", "http://127.0.0.1:8000/docs"),
-    ("dashboard.png", "http://127.0.0.1:8000/dashboard"),
 ]
 
 
@@ -48,9 +49,13 @@ def main() -> int:
             if filename == "answer.png":
                 page.fill("textarea", "What hepatitis B screening tests are approved?")
                 page.click('button[type="submit"]')
-                page.wait_for_timeout(2500)
+                page.wait_for_timeout(3000)
                 page.screenshot(path=str(OUTPUT_DIR / filename), full_page=True)
                 continue
+
+            if filename == "evaluation.png":
+                page.click('button:has-text("Run evaluation")')
+                page.wait_for_timeout(3000)
 
             page.screenshot(path=str(OUTPUT_DIR / filename), full_page=True)
 

@@ -32,12 +32,12 @@ async def lifespan(app: FastAPI):
 
 def create_app() -> FastAPI:
     app = FastAPI(
-        title="eRIS Modernization Lab",
+        title="Community Health AI Modernization Lab",
         version=settings.app_version,
         description=(
-            "Synthetic regulatory information system modernization lab with application "
-            "workflow, role-based access, audit trails, and stabilized legacy modules. "
-            "Portfolio reference implementation — not connected to EFDA or any government system."
+            "Synthetic community-health modernization lab with safe AI guidance, "
+            "interoperability adapters, role-based workflows, audit trails, and "
+            "legacy-system stabilization patterns. Portfolio reference implementation only."
         ),
         lifespan=lifespan,
         docs_url="/docs",
@@ -83,10 +83,10 @@ def create_app() -> FastAPI:
     @app.get("/", response_class=HTMLResponse, tags=["ui"])
     def landing_page() -> str:
         return render_landing(
-            "eRIS Modernization Lab",
-            "Synthetic regulatory workflow modernization reference with audit trails, role separation, and migration readiness patterns.",
-            "Not real eRIS. Not connected to EFDA or any government system. Portfolio demo only.",
-            "eris-modernization-lab",
+            "Community Health AI Modernization Lab",
+            "Synthetic modernization reference for health-worker AI, interoperability adapters, audit trails, and role-based workflow stabilization.",
+            "Synthetic data only. Not medical advice. Not connected to any real hospital, ministry, EFDA, or patient system.",
+            "hep-assist-ai-rag-platform",
             extra_links=[
                 (settings.frontend_url, "React app"),
                 ("/dashboard", "Legacy review dashboard"),
@@ -94,7 +94,7 @@ def create_app() -> FastAPI:
             ],
             quick_steps=[
                 'Check <a href="/health">/health</a> and <a href="/health/ready">/health/ready</a>',
-                f'Open <a href="{settings.frontend_url}">React frontend</a> — regulatory applications workflow',
+                f'Open <a href="{settings.frontend_url}">React frontend</a> — AI guidance, interop, and workflow modules',
                 'Interop lab: <a href="/interop/dashboard">/interop/dashboard</a> · <code>./scripts/interop_demo.sh</code>',
                 'Login: <code>POST /api/v1/auth/login</code> (see README demo credentials)',
                 'Submit application: <code>POST /api/v1/regulatory/applications</code>',

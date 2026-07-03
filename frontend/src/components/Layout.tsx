@@ -9,8 +9,8 @@ export function Layout() {
     <div className="app">
       <header className="header">
         <div>
-          <h1>eRIS Modernization Lab</h1>
-          <p className="tagline">Synthetic regulatory workflow demo — not connected to EFDA or any government system</p>
+          <h1>Community Health AI Modernization Lab</h1>
+          <p className="tagline">Safe AI guidance, interoperability adapters, and legacy workflow stabilization with synthetic data</p>
         </div>
         <nav>
           <NavLink to="/">Home</NavLink>
@@ -32,7 +32,7 @@ export function Layout() {
         <Outlet />
       </main>
       <footer className="footer">
-        Portfolio modernization lab with synthetic data. Demonstrates stabilization, migration readiness, and release discipline patterns.
+        Portfolio modernization lab with synthetic data. Demonstrates safe AI, interoperability, auditability, and release discipline patterns.
       </footer>
     </div>
   );
@@ -41,7 +41,7 @@ export function Layout() {
 export function DisclaimerBanner() {
   return (
     <div className="banner warning" role="alert">
-      Synthetic portfolio reference only. Not real eRIS. Not connected to EFDA or any government regulatory system.
+      Synthetic portfolio reference only. Not medical advice. Not connected to any real hospital, ministry, EFDA, or patient system.
     </div>
   );
 }
