@@ -4,28 +4,18 @@ from uuid import UUID
 import pytest
 from fastapi.testclient import TestClient
 
-from app.core.config import settings
-from app.db.session import init_db, reset_engine
 from app.main import app
 
 client = TestClient(app)
-
-
-@pytest.fixture(autouse=True)
-def test_db(tmp_path, monkeypatch):
-    db_path = tmp_path / "test.db"
-    reset_engine(f"sqlite:///{db_path}")
-    settings.audit_log_path = tmp_path / "audit_logs.jsonl"
-    init_db()
-    yield
-    reset_engine(f"sqlite:///{db_path}")
 
 
 def test_health_check() -> None:
     response = client.get("/health")
 
     assert response.status_code == 200
-    assert response.json()["status"] == "ok"
+    body = response.json()
+    assert body["status"] == "ok"
+    assert body["service"] == "HEP Assist AI RAG Platform"
 
 
 def test_preprocess_redacts_identifiers_and_expands_abbreviations() -> None:
