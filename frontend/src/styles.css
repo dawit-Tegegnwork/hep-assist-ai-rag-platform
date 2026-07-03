@@ -62,6 +62,11 @@ textarea, select { width: 100%; margin-top: 0.25rem; padding: 0.5rem; border: 1p
 
 .muted { color: #666; font-size: 0.9rem; }
 
+.api-status { font-size: 0.9rem; padding: 0.5rem 0.75rem; border-radius: 6px; margin-bottom: 1rem; }
+.api-status.ok { background: #ecfdf5; border: 1px solid #6ee7b7; }
+.api-status.down { background: #fdecec; border: 1px solid #e8a0a0; }
+.api-status.checking { background: #f3f4f6; border: 1px solid #d1d5db; }
+
 .error { color: #b00020; }
 
 .stats { display: flex; gap: 0.75rem; flex-wrap: wrap; margin: 0.75rem 0; font-size: 0.9rem; }

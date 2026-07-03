@@ -2,7 +2,7 @@
 
 Production-style **portfolio reference implementation** for a healthcare AI assistant inspired by Last Mile Health / HEP Assist AI requirements. Uses **synthetic data only** — not a deployed clinical system, not medical advice.
 
-[![Tests](https://github.com/dawit-Tegegnwork/healthcare-ai-workflow-assistant/actions/workflows/test.yml/badge.svg)](https://github.com/dawit-Tegegnwork/healthcare-ai-workflow-assistant/actions/workflows/test.yml)
+[![Tests](https://github.com/dawit-Tegegnwork/hep-assist-ai-rag-platform/actions/workflows/test.yml/badge.svg)](https://github.com/dawit-Tegegnwork/hep-assist-ai-rag-platform/actions/workflows/test.yml)
 
 **Target role:** Senior AI Engineer — healthcare AI, RAG, local-language support, safe AI, low-connectivity health-worker workflows.
 
@@ -27,8 +27,19 @@ docker compose up --build
 |---------|-----|
 | React frontend | http://localhost:5173 |
 | FastAPI + OpenAPI | http://localhost:8000/docs |
-| Health check | http://localhost:8000/health |
+| Health (live) | http://localhost:8000/health/live |
+| Health (ready) | http://localhost:8000/health/ready |
 | Legacy HTML dashboard | http://localhost:8000/dashboard |
+
+### Interview demo script (workable API calls)
+
+```bash
+./scripts/demo_workflow.sh http://127.0.0.1:8000
+```
+
+Runs health probes, safe Q&A with citations, refusal demo, Amharic example, evaluation, and audit — ideal for live interview walkthroughs.
+
+See [docs/PRODUCTION.md](docs/PRODUCTION.md) for deployment checklist and production env vars.
 
 ### Local development
 
@@ -206,8 +217,7 @@ Not implemented in this demo; documented for interview discussion.
 
 | | |
 |---|---|
-| **Live demo (legacy API)** | https://healthcare-ai-workflow-assistant.onrender.com/dashboard |
-| **API docs** | https://healthcare-ai-workflow-assistant.onrender.com/docs |
+| **Live API (Render)** | https://hep-assist-ai-rag-platform.onrender.com/docs |
 | **Local full stack** | `docker compose up --build` — frontend at http://localhost:5173 |
 
 See [docs/RENDER_DEPLOY.md](docs/RENDER_DEPLOY.md) for cloud deployment.
@@ -230,7 +240,7 @@ export MEDIMIND_EMBEDDING_MODEL=BAAI/bge-small-en-v1.5
 |-----|--------|--------|
 | ![Ask](docs/screenshots/ask.png) | ![Answer](docs/screenshots/answer.png) | ![Review](docs/screenshots/review.png) |
 
-Capture locally after `docker compose up --build`. See [docs/screenshots/README.md](docs/screenshots/README.md).
+Capture locally after `docker compose up --build`, or run `python scripts/capture_screenshots.py`. Screenshots below are from the live demo UI.
 
 ## License
 

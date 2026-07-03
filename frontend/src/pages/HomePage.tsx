@@ -1,5 +1,8 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { DisclaimerBanner } from "../components/Layout";
+
+const API_BASE = (import.meta.env.VITE_API_BASE as string | undefined) ?? "/api/v1";
 
 const FEATURES = [
   "Vector RAG over approved synthetic health content",
@@ -12,9 +15,23 @@ const FEATURES = [
 ];
 
 export function HomePage() {
+  const [apiStatus, setApiStatus] = useState<"checking" | "ok" | "down">("checking");
+
+  useEffect(() => {
+    fetch("/health/live")
+      .then((r) => (r.ok ? setApiStatus("ok") : setApiStatus("down")))
+      .catch(() => setApiStatus("down"));
+  }, []);
+
   return (
     <section className="card">
       <DisclaimerBanner />
+      <p className={`api-status ${apiStatus}`}>
+        API status: {apiStatus === "checking" ? "checking…" : apiStatus === "ok" ? "connected" : "unavailable"}
+        {apiStatus === "ok" && (
+          <> — <a href={`${API_BASE.replace("/api/v1", "")}/docs`} target="_blank" rel="noreferrer">OpenAPI docs</a></>
+        )}
+      </p>
       <h2>Health-worker AI assistant (portfolio demo)</h2>
       <p>
         Production-style reference implementation inspired by Last Mile Health / HEP Assist AI

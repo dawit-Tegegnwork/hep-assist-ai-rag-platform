@@ -1,12 +1,18 @@
 services:
   - type: web
-    name: healthcare-ai-workflow-assistant
+    name: hep-assist-ai-rag-platform
     runtime: docker
     plan: free
     dockerfilePath: ./Dockerfile
-    healthCheckPath: /health
+    healthCheckPath: /health/ready
     envVars:
+      - key: MEDIMIND_ENVIRONMENT
+        value: production
       - key: MEDIMIND_DATABASE_URL
-        value: sqlite:////tmp/healthcare_ai.db
+        value: sqlite:////tmp/hep_assist.db
+      - key: MEDIMIND_EMBEDDING_PROVIDER
+        value: mock
+      - key: MEDIMIND_AUTO_SEED_ON_STARTUP
+        value: "true"
       - key: PYTHONPATH
         value: /app/backend

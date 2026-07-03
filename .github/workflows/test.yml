@@ -24,6 +24,7 @@ jobs:
       - name: Run pytest
         env:
           MEDIMIND_EMBEDDING_PROVIDER: mock
+          MEDIMIND_RATE_LIMIT_ENABLED: "false"
         run: PYTHONPATH=backend pytest -q
 
       - uses: actions/setup-node@v4

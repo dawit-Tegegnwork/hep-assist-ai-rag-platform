@@ -16,6 +16,8 @@ def test_db(tmp_path, monkeypatch):
     reset_embedding_provider()
     monkeypatch.setenv("MEDIMIND_EMBEDDING_PROVIDER", "mock")
     settings.embedding_provider = "mock"
+    settings.rate_limit_enabled = False
+    settings.auto_seed_on_startup = False
     settings.audit_log_path = tmp_path / "audit_logs.jsonl"
     init_db()
     from app.services.vector_store import VectorStore
