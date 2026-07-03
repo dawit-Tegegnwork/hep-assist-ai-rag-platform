@@ -20,6 +20,12 @@ def test_refuse_prescribing_request() -> None:
     assert result.refusal_reason == "prescribing_request_not_supported"
 
 
+def test_refuse_prescribing_request_amharic() -> None:
+    result = assess_question("ለሂፓታይቲስ C ታዳሚ antiviral መድሃኒት መጠን ይመድቡልኝ", "am")
+    assert result.refused is True
+    assert result.refusal_reason == "prescribing_request_not_supported"
+
+
 def test_safe_screening_question_passes() -> None:
     result = assess_question("What screening tests are approved for hepatitis B?", "en")
     assert result.refused is False

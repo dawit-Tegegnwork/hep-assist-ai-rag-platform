@@ -19,6 +19,19 @@ PRESCRIBING_PATTERNS = [
     r"\b(which drug should|antiviral dose|treatment plan for)\b",
 ]
 
+# Example Amharic patterns for portfolio demos — not exhaustive clinical coverage.
+AMHARIC_EMERGENCY_PATTERNS = [
+    r"(አስቸኳይ|አደጋ|ወዲያውኑ|ህይወት አደጋ)",
+]
+
+AMHARIC_DIAGNOSIS_PATTERNS = [
+    r"(ምን በሽታ|ምን ድርብ|አፍራቅ|diagnos)",
+]
+
+AMHARIC_PRESCRIBING_PATTERNS = [
+    r"(መድሃኒት|መጠን|ይመድቡ|antiviral|dose)",
+]
+
 UNSAFE_PATTERNS = EMERGENCY_PATTERNS + DIAGNOSIS_PATTERNS + PRESCRIBING_PATTERNS
 
 
@@ -30,36 +43,47 @@ class SafetyAssessment:
     hallucination_flags: list[str]
 
 
+def _match_patterns(patterns: list[str], text: str) -> bool:
+    return any(re.search(pattern, text, re.IGNORECASE) for pattern in patterns)
+
+
 def assess_question(question: str, language: str) -> SafetyAssessment:
     risk_flags: list[str] = []
     text = question.lower()
 
-    for pattern in EMERGENCY_PATTERNS:
-        if re.search(pattern, text, re.IGNORECASE):
-            return SafetyAssessment(
-                refused=True,
-                refusal_reason="emergency_or_urgent_care",
-                risk_flags=["emergency_detected"],
-                hallucination_flags=[],
-            )
+    emergency_patterns = EMERGENCY_PATTERNS + (
+        AMHARIC_EMERGENCY_PATTERNS if language == "am" else []
+    )
+    diagnosis_patterns = DIAGNOSIS_PATTERNS + (
+        AMHARIC_DIAGNOSIS_PATTERNS if language == "am" else []
+    )
+    prescribing_patterns = PRESCRIBING_PATTERNS + (
+        AMHARIC_PRESCRIBING_PATTERNS if language == "am" else []
+    )
 
-    for pattern in DIAGNOSIS_PATTERNS:
-        if re.search(pattern, text, re.IGNORECASE):
-            return SafetyAssessment(
-                refused=True,
-                refusal_reason="diagnosis_request_not_supported",
-                risk_flags=["diagnosis_request"],
-                hallucination_flags=[],
-            )
+    if _match_patterns(emergency_patterns, text):
+        return SafetyAssessment(
+            refused=True,
+            refusal_reason="emergency_or_urgent_care",
+            risk_flags=["emergency_detected"],
+            hallucination_flags=[],
+        )
 
-    for pattern in PRESCRIBING_PATTERNS:
-        if re.search(pattern, text, re.IGNORECASE):
-            return SafetyAssessment(
-                refused=True,
-                refusal_reason="prescribing_request_not_supported",
-                risk_flags=["prescribing_request"],
-                hallucination_flags=[],
-            )
+    if _match_patterns(diagnosis_patterns, text):
+        return SafetyAssessment(
+            refused=True,
+            refusal_reason="diagnosis_request_not_supported",
+            risk_flags=["diagnosis_request"],
+            hallucination_flags=[],
+        )
+
+    if _match_patterns(prescribing_patterns, text):
+        return SafetyAssessment(
+            refused=True,
+            refusal_reason="prescribing_request_not_supported",
+            risk_flags=["prescribing_request"],
+            hallucination_flags=[],
+        )
 
     if language == "am":
         risk_flags.append("local_language_demo")

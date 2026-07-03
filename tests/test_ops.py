@@ -22,7 +22,7 @@ def test_health_includes_checks() -> None:
     assert response.status_code == 200
     body = response.json()
     assert body["status"] in {"ok", "degraded"}
-    assert body["service"] == "HEP Assist AI RAG Platform"
+    assert body["service"] == "eRIS Modernization Lab"
     assert "checks" in body
     assert body["checks"]["database"]["ok"] is True
 

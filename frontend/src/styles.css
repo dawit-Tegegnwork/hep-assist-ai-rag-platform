@@ -40,6 +40,8 @@ nav a.active { font-weight: 700; text-decoration: underline; }
 
 .form label { display: block; margin-bottom: 0.75rem; }
 
+input { width: 100%; margin-top: 0.25rem; padding: 0.5rem; border: 1px solid #c9d1da; border-radius: 4px; font: inherit; }
+
 textarea, select { width: 100%; margin-top: 0.25rem; padding: 0.5rem; border: 1px solid #c9d1da; border-radius: 4px; font: inherit; }
 
 .actions { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.75rem; }
@@ -85,7 +87,26 @@ textarea, select { width: 100%; margin-top: 0.25rem; padding: 0.5rem; border: 1p
 
 .low-bandwidth { margin-top: 1rem; font-size: 0.9rem; }
 
-.footer { color: #666; font-size: 0.85rem; border-top: 1px solid #d8dee6; }
+.row-between { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; }
+
+.link-button { background: none; border: none; color: #0b5fff; cursor: pointer; font: inherit; padding: 0; text-decoration: underline; }
+
+.status-pill { display: inline-block; margin-left: 0.5rem; padding: 0.15rem 0.5rem; border-radius: 999px; font-size: 0.8rem; background: #eef2f7; }
+
+.status-submitted { background: #e8f0fe; }
+.status-technical_review { background: #fff4e8; }
+.status-clarification_requested { background: #fdecec; }
+.status-resubmitted { background: #f3e8ff; }
+.status-approved { background: #ecfdf5; }
+.status-rejected { background: #fdecec; }
+
+.audit-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.audit-table th, .audit-table td { border: 1px solid #d8dee6; padding: 0.4rem; text-align: left; vertical-align: top; }
+.audit-table code { font-size: 0.75rem; word-break: break-word; }
+
+.table tr.pass td:last-child { color: #0d6832; font-weight: 600; }
+.table tr.fail td:last-child { color: #b42318; font-weight: 600; }
+
 
 @media (max-width: 640px) {
   .header { flex-direction: column; }

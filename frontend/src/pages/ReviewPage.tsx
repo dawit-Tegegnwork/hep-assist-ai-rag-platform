@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, QuestionDetail, QASummary } from "../api";
-import { DisclaimerBanner } from "../components/Layout";
+import { HepDisclaimerBanner } from "../components/Layout";
 
 export function ReviewPage() {
   const [items, setItems] = useState<QuestionDetail[]>([]);
@@ -39,7 +39,7 @@ export function ReviewPage() {
 
   return (
     <section className="card">
-      <DisclaimerBanner />
+      <HepDisclaimerBanner />
       <h2>Human review dashboard</h2>
       {summary && (
         <div className="stats">

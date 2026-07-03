@@ -5,9 +5,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 
+from app.api.interop import router as interop_router
 from app.api.qa import router as qa_router
 from app.api.routes import router
 from app.api.workflow import router as workflow_router
+from app.auth.router import router as auth_router
+from app.regulatory.api import router as regulatory_router
 from app.core.config import settings
 from app.core.exceptions import register_exception_handlers
 from app.core.health import build_health_payload, check_database
@@ -29,12 +32,12 @@ async def lifespan(app: FastAPI):
 
 def create_app() -> FastAPI:
     app = FastAPI(
-        title="HEP Assist AI RAG Platform",
+        title="eRIS Modernization Lab",
         version=settings.app_version,
         description=(
-            "Synthetic health-worker Q&A assistant with vector RAG, human review, "
-            "safety gates, and audit logging. Portfolio reference implementation — "
-            "not a deployed clinical production system."
+            "Synthetic regulatory information system modernization lab with application "
+            "workflow, role-based access, audit trails, and stabilized legacy modules. "
+            "Portfolio reference implementation — not connected to EFDA or any government system."
         ),
         lifespan=lifespan,
         docs_url="/docs",
@@ -53,9 +56,12 @@ def create_app() -> FastAPI:
     app.add_middleware(RateLimitMiddleware, requests_per_minute=settings.rate_limit_per_minute)
     app.add_middleware(RequestIdMiddleware)
 
+    app.include_router(auth_router, prefix=settings.api_prefix, tags=["auth"])
+    app.include_router(regulatory_router, prefix=settings.api_prefix, tags=["regulatory"])
     app.include_router(router, prefix=settings.api_prefix, tags=["legacy"])
     app.include_router(workflow_router, prefix=settings.api_prefix, tags=["workflow"])
     app.include_router(qa_router, prefix=settings.api_prefix, tags=["qa"])
+    app.include_router(interop_router, prefix=settings.api_prefix)
 
     @app.get("/health", tags=["ops"])
     def health_check() -> dict[str, object]:
@@ -77,26 +83,33 @@ def create_app() -> FastAPI:
     @app.get("/", response_class=HTMLResponse, tags=["ui"])
     def landing_page() -> str:
         return render_landing(
-            "HEP Assist AI RAG Platform",
-            "Production-style healthcare AI assistant with vector RAG, citations, human review, and safety gates.",
-            "Not for real patient data or clinical decision-making. Interview and demo portfolio only.",
-            "hep-assist-ai-rag-platform",
+            "eRIS Modernization Lab",
+            "Synthetic regulatory workflow modernization reference with audit trails, role separation, and migration readiness patterns.",
+            "Not real eRIS. Not connected to EFDA or any government system. Portfolio demo only.",
+            "eris-modernization-lab",
             extra_links=[
                 (settings.frontend_url, "React app"),
                 ("/dashboard", "Legacy review dashboard"),
+                ("/interop/dashboard", "Interop lab dashboard"),
             ],
             quick_steps=[
                 'Check <a href="/health">/health</a> and <a href="/health/ready">/health/ready</a>',
-                f'Open <a href="{settings.frontend_url}">React frontend</a> — ask a health-worker question',
-                'Run <code>POST /api/v1/questions</code> then <code>POST /api/v1/questions/{{id}}/answer</code> in <a href="/docs">/docs</a>',
-                'Review answers at <code>POST /api/v1/answers/{{id}}/review</code>',
-                'Run evaluation: <code>POST /api/v1/evaluation/run</code>',
+                f'Open <a href="{settings.frontend_url}">React frontend</a> — regulatory applications workflow',
+                'Interop lab: <a href="/interop/dashboard">/interop/dashboard</a> · <code>./scripts/interop_demo.sh</code>',
+                'Login: <code>POST /api/v1/auth/login</code> (see README demo credentials)',
+                'Submit application: <code>POST /api/v1/regulatory/applications</code>',
+                'Review transitions: <code>POST /api/v1/regulatory/applications/{{id}}/transition</code>',
             ],
         )
 
     @app.get("/dashboard", response_class=HTMLResponse, tags=["ui"])
     def dashboard() -> str:
         template_path = Path(__file__).parent / "static" / "dashboard.html"
+        return template_path.read_text(encoding="utf-8")
+
+    @app.get("/interop/dashboard", response_class=HTMLResponse, tags=["ui"])
+    def interop_dashboard() -> str:
+        template_path = Path(__file__).parent / "static" / "interop_dashboard.html"
         return template_path.read_text(encoding="utf-8")
 
     return app

@@ -107,3 +107,30 @@ class EvaluationRun(SQLModel, table=True):
     avg_retrieval_score: float = Field(default=0.0)
     results: list[dict] = Field(default_factory=list, sa_column=Column(JSON))
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+
+class ApplicationStatus(str, Enum):
+    SUBMITTED = "submitted"
+    TECHNICAL_REVIEW = "technical_review"
+    CLARIFICATION_REQUESTED = "clarification_requested"
+    RESUBMITTED = "resubmitted"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+
+
+class RegulatoryApplication(SQLModel, table=True):
+    __tablename__ = "regulatory_applications"
+
+    id: UUID = Field(default_factory=uuid4, primary_key=True)
+    reference_number: str = Field(max_length=32, unique=True, index=True)
+    product_name: str = Field(max_length=200)
+    application_type: str = Field(default="marketing_authorization", max_length=50)
+    applicant_organization: str = Field(max_length=200)
+    dossier_summary: str
+    supporting_documents: list[str] = Field(default_factory=list, sa_column=Column(JSON))
+    status: ApplicationStatus = Field(default=ApplicationStatus.SUBMITTED)
+    submitted_by: str = Field(max_length=50)
+    assigned_reviewer: Optional[str] = Field(default=None, max_length=50)
+    last_comment: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))

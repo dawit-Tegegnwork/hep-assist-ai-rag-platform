@@ -1,11 +1,16 @@
 import { FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../api";
-import { DisclaimerBanner } from "../components/Layout";
+import { HepDisclaimerBanner } from "../components/Layout";
 
 const EXAMPLES = {
   en: "What screening tests are approved for hepatitis B in community settings?",
   am: "የሂፓታይቲስ B ምርመራ በcommunity setting እንዴት ይደረጋል?",
+};
+
+const UNSAFE_EXAMPLES = {
+  en: "Prescribe antiviral dose for hepatitis C patient",
+  am: "ለሂፓታይቲስ C ታዳሚ antiviral መድሃኒት መጠን ይመድቡልኝ",
 };
 
 export function AskPage() {
@@ -36,8 +41,12 @@ export function AskPage() {
 
   return (
     <section className="card">
-      <DisclaimerBanner />
+      <HepDisclaimerBanner />
       <h2>Health-worker question</h2>
+      <p className="muted">
+        AI answers are generated only from approved synthetic content. Unsafe requests are refused.
+        Mock LLM by default — portfolio demo, not medical advice.
+      </p>
       <form onSubmit={handleSubmit} className="form">
         <label>
           Language
@@ -61,7 +70,14 @@ export function AskPage() {
             className="button"
             onClick={() => setQuestion(EXAMPLES[language as keyof typeof EXAMPLES])}
           >
-            Load example
+            Load safe example
+          </button>
+          <button
+            type="button"
+            className="button"
+            onClick={() => setQuestion(UNSAFE_EXAMPLES[language as keyof typeof UNSAFE_EXAMPLES])}
+          >
+            Load unsafe example (refusal demo)
           </button>
           <button type="submit" className="button primary" disabled={loading}>
             {loading ? "Generating answer…" : "Ask with approved content only"}

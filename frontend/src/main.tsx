@@ -7,6 +7,9 @@ import { AskPage } from "./pages/AskPage";
 import { AuditPage } from "./pages/AuditPage";
 import { EvaluationPage } from "./pages/EvaluationPage";
 import { HomePage } from "./pages/HomePage";
+import { LoginPage } from "./pages/LoginPage";
+import { ApplicationsPage } from "./pages/ApplicationsPage";
+import { ApplicationDetailPage } from "./pages/ApplicationDetailPage";
 import { ReviewPage } from "./pages/ReviewPage";
 import "./styles.css";
 
@@ -16,6 +19,9 @@ createRoot(document.getElementById("root")!).render(
       <Routes>
         <Route element={<Layout />}>
           <Route path="/" element={<HomePage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/applications" element={<ApplicationsPage />} />
+          <Route path="/applications/:id" element={<ApplicationDetailPage />} />
           <Route path="/ask" element={<AskPage />} />
           <Route path="/answers/:id" element={<AnswerPage />} />
           <Route path="/review" element={<ReviewPage />} />

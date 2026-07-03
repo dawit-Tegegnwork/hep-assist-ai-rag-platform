@@ -2,7 +2,15 @@
 
 from sqlmodel import Session, select
 
-from app.db.models import AIAnswer, ClinicalNote, Extraction, HealthQuestion, ReviewStatus
+from app.db.models import (
+    AIAnswer,
+    ApplicationStatus,
+    ClinicalNote,
+    Extraction,
+    HealthQuestion,
+    RegulatoryApplication,
+    ReviewStatus,
+)
 from app.db.session import get_engine, init_db
 from app.services.llm import MockLLMProvider
 from app.services.vector_store import VectorStore
@@ -78,6 +86,51 @@ DEMO_QUESTIONS = [
         "question_text": "When should I escalate jaundice cases to a clinician?",
         "language": "en",
         "review_status": ReviewStatus.PENDING,
+    },
+]
+
+
+DEMO_APPLICATIONS = [
+    {
+        "reference_number": "ERIS-DEMO-00001",
+        "product_name": "Synthetic Antibiotic XR-100",
+        "application_type": "marketing_authorization",
+        "applicant_organization": "Synthetic Pharma Ltd",
+        "dossier_summary": (
+            "Initial marketing authorization dossier for XR-100 extended-release tablets. "
+            "Includes synthetic stability data and bioequivalence summary for demo review."
+        ),
+        "supporting_documents": ["module_2.3.pdf", "module_3.2.P.1.pdf"],
+        "status": ApplicationStatus.TECHNICAL_REVIEW,
+        "submitted_by": "applicant",
+        "assigned_reviewer": "reviewer",
+    },
+    {
+        "reference_number": "ERIS-DEMO-00002",
+        "product_name": "Synthetic Vaccine Adjuvant V-22",
+        "application_type": "variation",
+        "applicant_organization": "Demo Biologics Co",
+        "dossier_summary": (
+            "Type II variation for manufacturing site change. Clarification requested on "
+            "cold-chain validation records."
+        ),
+        "supporting_documents": ["variation_form.pdf"],
+        "status": ApplicationStatus.CLARIFICATION_REQUESTED,
+        "submitted_by": "applicant",
+        "assigned_reviewer": "reviewer",
+        "last_comment": "Provide updated cold-chain validation protocol.",
+    },
+    {
+        "reference_number": "ERIS-DEMO-00003",
+        "product_name": "Synthetic Analgesic AP-50",
+        "application_type": "renewal",
+        "applicant_organization": "Synthetic Pharma Ltd",
+        "dossier_summary": "Renewal application with updated pharmacovigilance summary.",
+        "supporting_documents": ["pv_summary.pdf"],
+        "status": ApplicationStatus.APPROVED,
+        "submitted_by": "applicant",
+        "assigned_reviewer": "reviewer",
+        "last_comment": "Meets renewal criteria for demo purposes.",
     },
 ]
 
@@ -178,6 +231,8 @@ def seed(force: bool = False) -> int:
                 session.delete(extraction)
             for note in session.exec(select(ClinicalNote)).all():
                 session.delete(note)
+            for app in session.exec(select(RegulatoryApplication)).all():
+                session.delete(app)
             session.commit()
 
         for index, item in enumerate(DEMO_NOTES):
@@ -220,8 +275,16 @@ def seed(force: bool = False) -> int:
                 answer.reviewer_comment = "Synthetic seed review state"
             session.add(answer)
 
+        existing_apps = session.exec(select(RegulatoryApplication)).first()
+        if not existing_apps or force:
+            for item in DEMO_APPLICATIONS:
+                data = dict(item)
+                application = RegulatoryApplication(**data)
+                session.add(application)
+                created += 1
+
         session.commit()
-    print(f"Seeded {created} synthetic records (notes + questions).")
+    print(f"Seeded {created} synthetic records (notes + questions + applications).")
     return created
 
 

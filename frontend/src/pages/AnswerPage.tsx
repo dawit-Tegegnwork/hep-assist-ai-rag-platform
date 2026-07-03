@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api, Answer, Question } from "../api";
-import { DisclaimerBanner, RiskBanner } from "../components/Layout";
+import { HepDisclaimerBanner, RiskBanner } from "../components/Layout";
 
 export function AnswerPage() {
   const { id } = useParams<{ id: string }>();
@@ -34,7 +34,7 @@ export function AnswerPage() {
 
   return (
     <section className="card">
-      <DisclaimerBanner />
+      <HepDisclaimerBanner />
       <h2>Answer with citations</h2>
       {question && (
         <div className="meta">

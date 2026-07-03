@@ -197,6 +197,7 @@ class EvaluationCaseResult(BaseModel):
     has_citations: bool
     top_score: float
     matched_topic: str | None
+    passed: bool
 
 
 class EvaluationResult(BaseModel):
@@ -204,8 +205,10 @@ class EvaluationResult(BaseModel):
     answered: int
     refused: int
     with_citations: int
+    passed: int
     citation_rate: float
     refusal_rate: float
+    pass_rate: float
     avg_retrieval_score: float
     results: list[EvaluationCaseResult]
     disclaimer: str = "Evaluation uses synthetic golden questions only; not clinical validation."

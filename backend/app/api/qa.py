@@ -31,6 +31,38 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+def _evaluation_topic_matches(expected_topic: str | None, matched_topic: str | None, language: str) -> bool:
+    if not expected_topic:
+        return True
+    if expected_topic == "am":
+        return language == "am"
+    if not matched_topic:
+        return False
+    normalized_expected = expected_topic.replace("_", "-")
+    normalized_matched = matched_topic.replace("_", "-")
+    return normalized_expected in normalized_matched or normalized_matched.endswith(normalized_expected)
+
+
+def _evaluation_case_passed(
+    *,
+    expect_refusal: bool,
+    refused: bool,
+    answered: bool,
+    has_citations: bool,
+    expected_topic: str | None,
+    matched_topic: str | None,
+    language: str,
+) -> bool:
+    if expect_refusal:
+        return refused
+    return (
+        answered
+        and has_citations
+        and not refused
+        and _evaluation_topic_matches(expected_topic, matched_topic, language)
+    )
+
+
 def get_audit_logger(
     settings: Settings = Depends(get_settings),
     session: Session = Depends(get_session),
@@ -368,23 +400,58 @@ def run_evaluation(
     answered = 0
     refused = 0
     with_citations = 0
+    passed_count = 0
     score_total = 0.0
     score_count = 0
 
     for case in GOLDEN_EVAL_CASES:
+        expect_refusal = bool(case.get("expect_refusal"))
+        expected_topic = case.get("expected_topic")
         question_safety = assess_question(case["question"], case["language"])
-        if question_safety.refused or case.get("expect_refusal"):
+
+        if expect_refusal:
+            case_refused = question_safety.refused
+            if case_refused:
+                refused += 1
+            case_passed = _evaluation_case_passed(
+                expect_refusal=True,
+                refused=case_refused,
+                answered=False,
+                has_citations=False,
+                expected_topic=expected_topic,
+                matched_topic=None,
+                language=case["language"],
+            )
+            if case_passed:
+                passed_count += 1
+            results.append(
+                EvaluationCaseResult(
+                    question=case["question"],
+                    language=case["language"],
+                    expected_topic=expected_topic or "refusal",
+                    answered=False,
+                    refused=case_refused,
+                    has_citations=False,
+                    top_score=0.0,
+                    matched_topic=None,
+                    passed=case_passed,
+                )
+            )
+            continue
+
+        if question_safety.refused:
             refused += 1
             results.append(
                 EvaluationCaseResult(
                     question=case["question"],
                     language=case["language"],
-                    expected_topic=case.get("expected_topic") or "refusal",
+                    expected_topic=expected_topic or "",
                     answered=False,
                     refused=True,
                     has_citations=False,
                     top_score=0.0,
                     matched_topic=None,
+                    passed=False,
                 )
             )
             continue
@@ -412,12 +479,13 @@ def run_evaluation(
                 EvaluationCaseResult(
                     question=case["question"],
                     language=case["language"],
-                    expected_topic=case.get("expected_topic") or "",
+                    expected_topic=expected_topic or "",
                     answered=False,
                     refused=True,
                     has_citations=False,
                     top_score=top_score,
                     matched_topic=matched_topic,
+                    passed=False,
                 )
             )
             continue
@@ -437,16 +505,29 @@ def run_evaluation(
         if has_citations:
             with_citations += 1
 
+        case_passed = _evaluation_case_passed(
+            expect_refusal=False,
+            refused=is_refused,
+            answered=not is_refused,
+            has_citations=has_citations,
+            expected_topic=expected_topic,
+            matched_topic=matched_topic,
+            language=case["language"],
+        )
+        if case_passed:
+            passed_count += 1
+
         results.append(
             EvaluationCaseResult(
                 question=case["question"],
                 language=case["language"],
-                expected_topic=case.get("expected_topic") or "",
+                expected_topic=expected_topic or "",
                 answered=not is_refused,
                 refused=is_refused,
                 has_citations=has_citations,
                 top_score=top_score,
                 matched_topic=matched_topic,
+                passed=case_passed,
             )
         )
 
@@ -457,8 +538,10 @@ def run_evaluation(
         answered=answered,
         refused=refused,
         with_citations=with_citations,
+        passed=passed_count,
         citation_rate=round(with_citations / total, 3) if total else 0.0,
         refusal_rate=round(refused / total, 3) if total else 0.0,
+        pass_rate=round(passed_count / total, 3) if total else 0.0,
         avg_retrieval_score=avg_score,
         results=results,
     )
@@ -483,6 +566,8 @@ def run_evaluation(
                 "answered": answered,
                 "refused": refused,
                 "with_citations": with_citations,
+                "passed": passed_count,
+                "pass_rate": eval_result.pass_rate,
             },
         ),
         entity_type="evaluation_run",

@@ -17,6 +17,8 @@ def get_engine():
 
 
 def init_db() -> None:
+    import app.interop.db_models  # noqa: F401 — register interop tables
+
     SQLModel.metadata.create_all(get_engine())
 
 

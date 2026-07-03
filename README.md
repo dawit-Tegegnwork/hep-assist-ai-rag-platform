@@ -1,21 +1,46 @@
-# HEP Assist AI RAG Platform
+# eRIS Modernization Lab
 
-Production-style **portfolio reference implementation** for a healthcare AI assistant inspired by Last Mile Health / HEP Assist AI requirements. Uses **synthetic data only** — not a deployed clinical system, not medical advice.
+Production-style **modernization lab** for a legacy regulatory information system workflow — inspired by public-sector digital health and governance programs (Palladium / Data.FI-style roles). Uses **synthetic data only**. This is **not** real eRIS and is **not** connected to EFDA or any government system.
 
 [![Tests](https://github.com/dawit-Tegegnwork/hep-assist-ai-rag-platform/actions/workflows/test.yml/badge.svg)](https://github.com/dawit-Tegegnwork/hep-assist-ai-rag-platform/actions/workflows/test.yml)
 
-**Target role:** Senior AI Engineer — healthcare AI, RAG, local-language support, safe AI, low-connectivity health-worker workflows.
+**Target role:** Software engineer / technical lead — regulatory systems modernization, stabilization, migration readiness, release discipline.
 
 ## What this is (honest framing)
 
-This repo demonstrates architecture, safety patterns, testing, and deployment practices expected in real healthcare AI systems. It is an **interview/demo portfolio project** with:
+This repo demonstrates how a long-lived regulatory workflow platform can be **stabilized** and made **migration-ready** while preserving auditability and role separation. It is a **portfolio reference implementation** with:
 
-- Synthetic health-worker questions and approved guideline content only
-- Mock LLM by default (no paid API keys required)
-- Human-in-the-loop review before trusting any AI output
-- Clear disclaimers throughout
+- Synthetic marketing-authorization-style applications (not real dossiers)
+- Enforced workflow states with server-side transition validation
+- Role-based access control (applicant, technical reviewer, admin, auditor)
+- Audit log entry for every application transition
+- Documented release, rollback, and support procedures
+- Stabilized legacy Q&A module (health-worker RAG demo) retained for comparison
 
-It is **not** a production deployment and must not be used with real patient data.
+## Legacy modernization story
+
+### What the old system struggled with
+
+| Pain point | Legacy behavior |
+|------------|-----------------|
+| Manual review | Spreadsheet queues, no enforced workflow |
+| Clarification loop | Email/phone with no system record |
+| Auditability | Updates without actor or reason |
+| Role separation | Shared accounts, applicants saw internal notes |
+| Migration / release | Single cloud tenant, manual deploys, slow rollback |
+
+### What this lab improves
+
+| Capability | Implementation |
+|------------|----------------|
+| Regulatory workflow | submitted → technical review → clarification → resubmit → approve/reject |
+| Stabilization | Invalid transitions rejected with tests |
+| Role separation | JWT + RBAC on `/api/v1/regulatory/*` |
+| Audit trail | `regulatory.application.*` events per transition |
+| Migration readiness | `docs/migration/gcp-to-local-plan.md` |
+| Release discipline | `docs/checklists/release.md`, `docs/checklists/rollback.md` |
+
+See [docs/legacy-modernization-assessment.md](docs/legacy-modernization-assessment.md) for the full assessment.
 
 ## Quick start (3 minutes)
 
@@ -27,19 +52,31 @@ docker compose up --build
 |---------|-----|
 | React frontend | http://localhost:5173 |
 | FastAPI + OpenAPI | http://localhost:8000/docs |
-| Health (live) | http://localhost:8000/health/live |
 | Health (ready) | http://localhost:8000/health/ready |
-| Legacy HTML dashboard | http://localhost:8000/dashboard |
 
-### Interview demo script (workable API calls)
+### Demo credentials (synthetic)
+
+| Username | Password | Role |
+|----------|----------|------|
+| `applicant` | `applicant123` | Submit and resubmit applications |
+| `reviewer` | `reviewer123` | Technical review and decisions |
+| `admin` | `admin123` | Full workflow access |
+| `auditor` | `auditor123` | Read-only audit access |
+
+### 5-minute recruiter walkthrough
+
+1. Sign in at http://localhost:5173/login as `reviewer` / `reviewer123`
+2. Open **Applications** — review dashboard counts by status
+3. Open an application — run **Start technical review** → **Request clarification**
+4. Sign in as `applicant` — **Resubmit** with updated dossier
+5. Sign in as `reviewer` — **Approve** and verify **Audit trail**
+
+Full script: [docs/DEMO_WALKTHROUGH.md](docs/DEMO_WALKTHROUGH.md)
 
 ```bash
-./scripts/demo_workflow.sh http://127.0.0.1:8000
+chmod +x scripts/demo_regulatory_workflow.sh
+./scripts/demo_regulatory_workflow.sh http://127.0.0.1:8000
 ```
-
-Runs health probes, safe Q&A with citations, refusal demo, Amharic example, evaluation, and audit — ideal for live interview walkthroughs.
-
-See [docs/PRODUCTION.md](docs/PRODUCTION.md) for deployment checklist and production env vars.
 
 ### Local development
 
@@ -59,8 +96,6 @@ PYTHONPATH=backend uvicorn main:app --app-dir backend --reload
 cd frontend && npm install && npm run dev
 ```
 
-Open http://localhost:5173 — API calls proxy to port 8000.
-
 ### Seed synthetic data
 
 ```bash
@@ -79,168 +114,104 @@ cd frontend && npm run lint && npm run build
 
 ```mermaid
 flowchart TB
-  subgraph frontend [ViteReactFrontend]
-    Ask[AskQuestion]
-    Answer[AnswerWithCitations]
-    Review[HumanReview]
-    Eval[Evaluation]
+  subgraph frontend [ReactFrontend]
+    Login[LoginRBAC]
+    Apps[ApplicationsQueue]
+    AuditUI[AuditLog]
+    LegacyQA[LegacyQAModule]
   end
 
   subgraph api [FastAPI]
-    QA["/questions /answers"]
-    EvalAPI["/evaluation/run"]
-    Legacy["/notes legacy RAG"]
-    Audit["/audit"]
+    Auth["/auth/login"]
+    Reg["/regulatory/applications"]
+    Dash["/regulatory/dashboard/summary"]
+    AuditAPI["/audit"]
+    QA["/questions legacy"]
   end
 
-  subgraph rag [RAGPipeline]
-    Embed[MockOrFastEmbed]
-    Store[VectorStore_JSON_or_pgvector]
-    Safety[SafetyGate]
-    LLM[MockOrOpenAI]
+  subgraph data [PostgreSQL_or_SQLite]
+    AppsDB[regulatory_applications]
+    AuditDB[audit_events]
   end
 
   frontend --> api
-  QA --> Safety
-  Safety --> Store
-  Store --> Embed
-  QA --> LLM
-  QA --> Audit
-  EvalAPI --> QA
+  Reg --> AppsDB
+  Reg --> AuditDB
+  Auth --> Reg
 ```
 
-See [docs/architecture.md](docs/architecture.md) and [docs/api.md](docs/api.md).
+See [docs/architecture.md](docs/architecture.md), [docs/api.md](docs/api.md), and [docs/operations/support-runbook.md](docs/operations/support-runbook.md).
 
-## Features
+## Regulatory workflow API
 
-### Health-worker Q&A (primary)
-- Submit questions in English or Amharic examples
-- Vector RAG over approved synthetic content
-- Answer citations with retrieval scores
-- Risk and hallucination flags
-- Refuse unsafe or unsupported questions
-- Human review: approve / reject / request changes
-- Audit log for every AI answer
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | `/api/v1/auth/login` | No | Obtain JWT |
+| GET | `/api/v1/auth/me` | Yes | Current user |
+| POST | `/api/v1/regulatory/applications` | applicant | Submit application |
+| GET | `/api/v1/regulatory/applications` | Yes | List applications |
+| GET | `/api/v1/regulatory/applications/{id}` | Yes | Application detail |
+| POST | `/api/v1/regulatory/applications/{id}/transition` | reviewer | State transition |
+| POST | `/api/v1/regulatory/applications/{id}/resubmit` | applicant | Resubmit after clarification |
+| GET | `/api/v1/regulatory/dashboard/summary` | reviewer/auditor | Status counts |
+| GET | `/api/v1/regulatory/applications/{id}/audit` | Yes | Per-application audit trail |
+| GET | `/api/v1/audit` | No | Global audit log (legacy) |
 
-### Legacy workflow (retained)
-- Clinical note extraction with human review
-- Keyword guideline search, SOAP draft, preprocessing
-
-### Safety
-- Refuse emergency, diagnosis, and prescribing requests
-- Approved-content-only mode with retrieval confidence threshold
-- Grounding heuristic flags possible hallucinations
-- Synthetic data disclaimers on all outputs
-
-### Local-language support
-- Amharic example questions and content chunks
-- Architecture for STT → language detect → RAG → TTS (documented, not fully built)
-- See README section on voice/IVR below
-
-## API endpoints
-
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/health` | Health check |
-| POST | `/api/v1/questions` | Submit health-worker question |
-| POST | `/api/v1/questions/{id}/answer` | Run RAG + LLM pipeline |
-| GET | `/api/v1/questions` | List questions with latest answers |
-| GET | `/api/v1/questions/{id}` | Question detail |
-| POST | `/api/v1/answers/{id}/review` | Human review action |
-| GET | `/api/v1/dashboard/qa-summary` | Q&A review counts |
-| POST | `/api/v1/evaluation/run` | Golden test set evaluation |
-| GET | `/api/v1/audit` | Audit event list |
-| POST | `/api/v1/notes` | Create synthetic note (legacy) |
-| POST | `/api/v1/notes/{id}/extract` | Structured extraction (legacy) |
-| POST | `/api/v1/guidelines/search` | Guideline search (legacy) |
-
-Full reference: [docs/api.md](docs/api.md)
-
-## Example Q&A workflow
+### Example workflow (curl)
 
 ```bash
-# Ask a question
-curl -X POST http://127.0.0.1:8000/api/v1/questions \
+TOKEN=$(curl -s -X POST http://127.0.0.1:8000/api/v1/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"question_text":"What hepatitis B screening tests are approved?","language":"en"}'
+  -d '{"username":"applicant","password":"applicant123"}' | jq -r .access_token)
 
-# Generate answer (use question id from response)
-curl -X POST http://127.0.0.1:8000/api/v1/questions/{QUESTION_ID}/answer
-
-# Review answer
-curl -X POST http://127.0.0.1:8000/api/v1/answers/{ANSWER_ID}/review \
+curl -X POST http://127.0.0.1:8000/api/v1/regulatory/applications \
+  -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"action":"approve","reviewer_comment":"Demo approval"}'
+  -d '{
+    "product_name": "Synthetic Product XR-200",
+    "application_type": "marketing_authorization",
+    "applicant_organization": "Synthetic Pharma Ltd",
+    "dossier_summary": "Demo dossier for regulatory workflow testing with sufficient detail."
+  }'
 ```
+
+## Documentation index
+
+| Document | Purpose |
+|----------|---------|
+| [legacy-modernization-assessment.md](docs/legacy-modernization-assessment.md) | Legacy pain points vs. lab improvements |
+| [migration/gcp-to-local-plan.md](docs/migration/gcp-to-local-plan.md) | GCP-to-local migration phases |
+| [checklists/release.md](docs/checklists/release.md) | Pre/post release checklist |
+| [checklists/rollback.md](docs/checklists/rollback.md) | Rollback procedure |
+| [operations/support-runbook.md](docs/operations/support-runbook.md) | Common issues and fixes |
+| [DEMO_WALKTHROUGH.md](docs/DEMO_WALKTHROUGH.md) | Recruiter demo path |
+
+## Stabilized legacy modules
+
+The health-worker Q&A RAG module remains available as a comparison point for incremental modernization:
+
+- `POST /api/v1/questions` — synthetic health-worker Q&A
+- `POST /api/v1/answers/{id}/review` — human review (legacy pattern)
+- `./scripts/demo_workflow.sh` — original Q&A demo script
 
 ## What this proves for recruiters
 
-- **RAG pipeline design:** chunking, embeddings, vector retrieval, citation display
-- **Healthcare safety awareness:** refusal gates, approved-content-only mode, audit trails
-- **Human-in-the-loop AI:** review workflow before trusting outputs
-- **Full-stack delivery:** FastAPI + PostgreSQL + React + Docker Compose + CI
-- **Low-connectivity thinking:** minimal frontend, offline architecture notes
-- **Local-language workflow:** Amharic examples with honest limitations documented
-- **Testing discipline:** retrieval, API, safety, and audit tests
+- **Regulatory workflow design** — state machine, clarification loop, decision audit
+- **Stabilization** — RBAC, invalid transition rejection, tested dashboard counts
+- **Migration readiness** — documented cloud-to-container migration plan
+- **Release discipline** — checklists, smoke scripts, support runbook
+- **Full-stack delivery** — FastAPI + PostgreSQL + React + Docker + CI
+- **Honest scope** — synthetic data, clear disclaimers, no government claims
 
-## Interview talking points
-
-1. **Why approved-content-only?** Health workers in low-resource settings need answers grounded in ministry-approved protocols, not open-ended LLM generation.
-2. **How do you handle unsafe questions?** Rule-based pre-checks for emergency/diagnosis/prescribing plus retrieval confidence thresholds before generation.
-3. **How would you add Amharic voice/IVR?** Whisper STT → language detect → translate query for retrieval → generate in Amharic → TTS; cache approved chunks offline.
-4. **How do you evaluate RAG quality?** Golden question set measuring citation rate, refusal rate, and retrieval scores — with human review as the final gate.
-5. **Why mock LLM default?** Portfolio runs without API keys; architecture supports OpenAI-compatible provider via env vars.
-
-## Voice / IVR future architecture
-
-```
-Caller (Amharic) → STT (Whisper) → Language detect
-  → RAG Q&A (this API) → TTS (Amharic voice) → Audio response
-  → Optional SMS fallback with cited excerpt when bandwidth is low
-```
-
-Not implemented in this demo; documented for interview discussion.
-
-## Known limitations and next improvements
+## Known limitations
 
 | Area | Current state | Next step |
 |------|---------------|-----------|
-| Embeddings | Mock token-hash default; optional `fastembed` | Production sentence-transformers + pgvector index |
-| Translation | Amharic examples only, not certified | Integrate NLLB or similar with confidence scoring |
-| Auth | None | JWT + role-based access for health workers vs reviewers |
-| Migrations | `create_all()` | Alembic migrations |
-| Offline | Documented only | Service worker + cached approved chunks |
-| FHIR / EHR | Not in scope | FHIR QuestionnaireResponse export |
-| Compliance | Portfolio disclaimers | Formal HIPAA / GDPR assessment for real deployment |
-
-## Try live / Run locally
-
-| | |
-|---|---|
-| **Live API (Render)** | https://hep-assist-ai-rag-platform.onrender.com/docs |
-| **Local full stack** | `docker compose up --build` — frontend at http://localhost:5173 |
-
-See [docs/RENDER_DEPLOY.md](docs/RENDER_DEPLOY.md) for cloud deployment.
-
-## Optional providers
-
-```bash
-# OpenAI-compatible LLM
-export OPENAI_API_KEY=sk-...
-export OPENAI_MODEL=gpt-4o-mini
-
-# Local embeddings (pip install fastembed)
-export MEDIMIND_EMBEDDING_PROVIDER=fastembed
-export MEDIMIND_EMBEDDING_MODEL=BAAI/bge-small-en-v1.5
-```
-
-## Screenshots
-
-| Ask | Answer | Review |
-|-----|--------|--------|
-| ![Ask](docs/screenshots/ask.png) | ![Answer](docs/screenshots/answer.png) | ![Review](docs/screenshots/review.png) |
-
-Capture locally after `docker compose up --build`, or run `python scripts/capture_screenshots.py`. Screenshots below are from the live demo UI.
+| Auth | Demo JWT users | Enterprise OIDC / IdP |
+| Migrations | `create_all()` | Alembic |
+| Document storage | Filename list only | Object store + checksums |
+| Legacy Q&A | Open endpoints | Optional auth alignment |
+| Compliance | Portfolio disclaimers | Formal assessment for real deployment |
 
 ## License
 

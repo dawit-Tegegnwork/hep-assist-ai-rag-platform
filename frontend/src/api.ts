@@ -1,5 +1,154 @@
 const API_BASE = (import.meta.env.VITE_API_BASE as string | undefined) ?? "/api/v1";
 
+const TOKEN_KEY = "eris_demo_token";
+const USER_KEY = "eris_demo_user";
+
+export type AuthUser = {
+  username: string;
+  role: string;
+  display_name: string;
+  organization: string;
+};
+
+export type RegulatoryApplication = {
+  id: string;
+  reference_number: string;
+  product_name: string;
+  application_type: string;
+  applicant_organization: string;
+  dossier_summary: string;
+  supporting_documents: string[];
+  status: string;
+  submitted_by: string;
+  assigned_reviewer: string | null;
+  last_comment: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type RegulatorySummary = {
+  submitted: number;
+  technical_review: number;
+  clarification_requested: number;
+  resubmitted: number;
+  approved: number;
+  rejected: number;
+  total: number;
+};
+
+export type AuditTrailEvent = {
+  id: string;
+  action: string;
+  metadata: Record<string, unknown>;
+  created_at: string;
+};
+
+function getToken(): string | null {
+  return localStorage.getItem(TOKEN_KEY);
+}
+
+export function getStoredUser(): AuthUser | null {
+  const raw = localStorage.getItem(USER_KEY);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as AuthUser;
+  } catch {
+    return null;
+  }
+}
+
+export function clearAuth(): void {
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(USER_KEY);
+}
+
+export function isAuthenticated(): boolean {
+  return Boolean(getToken());
+}
+
+async function request<T>(path: string, options?: RequestInit): Promise<T> {
+  const token = getToken();
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...(options?.headers as Record<string, string> | undefined),
+  };
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+  const response = await fetch(`${API_BASE}${path}`, { ...options, headers });
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(detail || `Request failed: ${response.status}`);
+  }
+  return response.json() as Promise<T>;
+}
+
+export const authApi = {
+  login: async (username: string, password: string) => {
+    const result = await request<{
+      access_token: string;
+      username: string;
+      role: string;
+      display_name: string;
+      organization: string;
+    }>("/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username, password }),
+    });
+    localStorage.setItem(TOKEN_KEY, result.access_token);
+    localStorage.setItem(
+      USER_KEY,
+      JSON.stringify({
+        username: result.username,
+        role: result.role,
+        display_name: result.display_name,
+        organization: result.organization,
+      }),
+    );
+    return result;
+  },
+  me: () => request<AuthUser>("/auth/me"),
+  logout: () => {
+    clearAuth();
+  },
+};
+
+export const regulatoryApi = {
+  listApplications: (status?: string) =>
+    request<RegulatoryApplication[]>(
+      status ? `/regulatory/applications?status=${status}` : "/regulatory/applications",
+    ),
+  getApplication: (id: string) => request<RegulatoryApplication>(`/regulatory/applications/${id}`),
+  submitApplication: (body: {
+    product_name: string;
+    application_type: string;
+    applicant_organization: string;
+    dossier_summary: string;
+    supporting_documents?: string[];
+  }) =>
+    request<RegulatoryApplication>("/regulatory/applications", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+  transition: (id: string, action: string, comment?: string) =>
+    request<RegulatoryApplication>(`/regulatory/applications/${id}/transition`, {
+      method: "POST",
+      body: JSON.stringify({ action, comment }),
+    }),
+  resubmit: (
+    id: string,
+    body: { dossier_summary: string; supporting_documents?: string[]; applicant_note?: string },
+  ) =>
+    request<RegulatoryApplication>(`/regulatory/applications/${id}/resubmit`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+  summary: () => request<RegulatorySummary>("/regulatory/dashboard/summary"),
+  auditTrail: (id: string) =>
+    request<AuditTrailEvent[]>(`/regulatory/applications/${id}/audit`),
+};
+
+// Re-export existing Q&A API from api.ts patterns
 export type Citation = {
   chunk_id: string;
   title: string;
@@ -62,8 +211,10 @@ export type EvaluationResult = {
   answered: number;
   refused: number;
   with_citations: number;
+  passed: number;
   citation_rate: number;
   refusal_rate: number;
+  pass_rate: number;
   avg_retrieval_score: number;
   results: Array<{
     question: string;
@@ -74,21 +225,10 @@ export type EvaluationResult = {
     has_citations: boolean;
     top_score: number;
     matched_topic: string | null;
+    passed: boolean;
   }>;
   disclaimer: string;
 };
-
-async function request<T>(path: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE}${path}`, {
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    ...options,
-  });
-  if (!response.ok) {
-    const detail = await response.text();
-    throw new Error(detail || `Request failed: ${response.status}`);
-  }
-  return response.json() as Promise<T>;
-}
 
 export const api = {
   createQuestion: (body: {

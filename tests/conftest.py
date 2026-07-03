@@ -9,6 +9,20 @@ from app.services.embeddings import reset_embedding_provider
 client = TestClient(app)
 
 
+def auth_headers(role: str = "admin") -> dict[str, str]:
+    credentials = {
+        "admin": ("admin", "admin123"),
+        "applicant": ("applicant", "applicant123"),
+        "reviewer": ("reviewer", "reviewer123"),
+        "auditor": ("auditor", "auditor123"),
+    }
+    username, password = credentials[role]
+    response = client.post("/api/v1/auth/login", json={"username": username, "password": password})
+    assert response.status_code == 200, response.text
+    token = response.json()["access_token"]
+    return {"Authorization": f"Bearer {token}"}
+
+
 @pytest.fixture(autouse=True)
 def test_db(tmp_path, monkeypatch):
     db_path = tmp_path / "test.db"
@@ -18,6 +32,7 @@ def test_db(tmp_path, monkeypatch):
     settings.embedding_provider = "mock"
     settings.rate_limit_enabled = False
     settings.auto_seed_on_startup = False
+    settings.auth_enabled = True
     settings.audit_log_path = tmp_path / "audit_logs.jsonl"
     init_db()
     from app.services.vector_store import VectorStore
