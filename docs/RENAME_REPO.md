@@ -1,9 +1,10 @@
 # GitHub rename instructions
 
-After local acceptance, rename the repository on GitHub:
+Rename the repository on GitHub to match the portfolio project name:
 
-1. Settings → General → Repository name → `healthcare-ai-workflow-assistant`
-2. Update local remote: `git remote set-url origin https://github.com/dawit-Tegegnwork/healthcare-ai-workflow-assistant.git`
-3. Update links in `portfolio-website` and `healthcare-integration-portfolio`
-
-Do not push until Dawit approves.
+1. Settings → General → Repository name → `hep-assist-ai-rag-platform`
+2. Update local remote:
+   ```bash
+   git remote set-url origin https://github.com/dawit-Tegegnwork/hep-assist-ai-rag-platform.git
+   ```
+3. Update links in portfolio website and related repos.

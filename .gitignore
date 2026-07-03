@@ -15,3 +15,6 @@ htmlcov/
 audit_logs/
 test_audit_logs.jsonl
 *.db
+frontend/node_modules/
+frontend/dist/
+frontend/tsconfig.tsbuildinfo

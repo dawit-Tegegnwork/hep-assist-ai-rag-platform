@@ -1,15 +1,14 @@
 # Screenshots
 
-Add demo screenshots here after running the app locally:
+Capture after running `docker compose up --build`:
 
-- `dashboard.png` — `/dashboard` review counts
-- `swagger.png` — `/docs` OpenAPI UI
-- `workflow.png` — note → extract → review curl or UI flow
+| File | Page | URL |
+|------|------|-----|
+| `ask.png` | Ask question form | http://localhost:5173/ask |
+| `answer.png` | Answer with citations | Submit a question, view answer page |
+| `review.png` | Human review dashboard | http://localhost:5173/review |
+| `evaluation.png` | Evaluation dashboard | http://localhost:5173/evaluation |
+| `dashboard.png` | Legacy HTML dashboard | http://localhost:8000/dashboard |
+| `swagger.png` | OpenAPI docs | http://localhost:8000/docs |
 
-Generate with browser screenshots or:
-
-```bash
-docker compose up --build
-PYTHONPATH=backend python -m app.scripts.seed
-# Open http://127.0.0.1:8000/dashboard and capture
-```
+Placeholder files can be replaced with real captures for portfolio README.
