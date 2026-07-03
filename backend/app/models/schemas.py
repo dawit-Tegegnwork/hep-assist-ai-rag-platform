@@ -28,6 +28,7 @@ class GuidelineChunk(BaseModel):
     source: str
     summary: str
     score: float
+    language: str = "en"
 
 
 class GuidelineSearchOutput(BaseModel):
@@ -127,4 +128,85 @@ class AuditEventResponse(BaseModel):
     synthetic_only: bool
     metadata: dict[str, object]
     created_at: datetime
+
+
+class Citation(BaseModel):
+    chunk_id: str
+    title: str
+    source: str
+    excerpt: str
+    score: float
+
+
+class QuestionCreateInput(BaseModel):
+    question_text: str = Field(..., min_length=3, max_length=2000)
+    language: str = Field(default="en", max_length=10)
+    worker_id: str = Field(default="synthetic-worker-001", max_length=50)
+    approved_content_only: bool = True
+
+
+class QuestionResponse(BaseModel):
+    id: UUID
+    question_text: str
+    language: str
+    worker_id: str
+    approved_content_only: bool
+    created_at: datetime
+
+
+class AnswerResponse(BaseModel):
+    id: UUID
+    question_id: UUID
+    answer_text: str
+    citations: list[Citation]
+    risk_flags: list[str]
+    hallucination_flags: list[str]
+    refused: bool
+    refusal_reason: str | None
+    review_status: str
+    reviewer_comment: str | None
+    reviewed_at: datetime | None
+    retrieval_scores: list[float]
+    approved_content_only: bool
+    provider: str
+    disclaimer: str = "Synthetic demo answer; not medical advice. Human review required."
+    created_at: datetime
+
+
+class QuestionDetailResponse(BaseModel):
+    question: QuestionResponse
+    latest_answer: AnswerResponse | None
+
+
+class QADashboardSummary(BaseModel):
+    pending_review: int
+    approved: int
+    rejected: int
+    changes_requested: int
+    total_questions: int
+    total_answers: int
+    refused_answers: int
+
+
+class EvaluationCaseResult(BaseModel):
+    question: str
+    language: str
+    expected_topic: str
+    answered: bool
+    refused: bool
+    has_citations: bool
+    top_score: float
+    matched_topic: str | None
+
+
+class EvaluationResult(BaseModel):
+    total_questions: int
+    answered: int
+    refused: int
+    with_citations: int
+    citation_rate: float
+    refusal_rate: float
+    avg_retrieval_score: float
+    results: list[EvaluationCaseResult]
+    disclaimer: str = "Evaluation uses synthetic golden questions only; not clinical validation."
 

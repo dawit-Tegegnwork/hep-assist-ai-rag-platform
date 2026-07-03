@@ -2,8 +2,10 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 
+from app.api.qa import router as qa_router
 from app.api.routes import router
 from app.api.workflow import router as workflow_router
 from app.core.config import settings
@@ -21,16 +23,24 @@ async def lifespan(app: FastAPI):
 
 def create_app() -> FastAPI:
     app = FastAPI(
-        title="Healthcare AI Workflow Assistant",
-        version="0.2.0",
+        title="HEP Assist AI RAG Platform",
+        version="1.0.0",
         description=(
-            "Synthetic healthcare note assistant with structured extraction, "
-            "human review workflow, audit logging, and demo dashboard."
+            "Synthetic health-worker Q&A assistant with vector RAG, human review, "
+            "safety gates, and audit logging. Portfolio demo only."
         ),
         lifespan=lifespan,
     )
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.cors_origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
     app.include_router(router, prefix=settings.api_prefix)
     app.include_router(workflow_router, prefix=settings.api_prefix)
+    app.include_router(qa_router, prefix=settings.api_prefix)
 
     @app.get("/health")
     def health_check() -> dict[str, str]:
