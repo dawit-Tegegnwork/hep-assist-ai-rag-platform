@@ -116,7 +116,7 @@ textarea, select { width: 100%; margin-top: 0.25rem; padding: 0.5rem; border: 1p
 /* Clinical operations visual system */
 :root {
   color: #111827;
-  background: #f4f5f7;
+  background: #d5e2df;
   font-family: "IBM Plex Sans", "Helvetica Neue", sans-serif;
 }
 
@@ -146,7 +146,8 @@ textarea, select { width: 100%; margin-top: 0.25rem; padding: 0.5rem; border: 1p
 .footer { max-width: 1080px; color: #6b7280; font-size: 0.8rem; border-top: 1px solid #dfe2e7; }
 
 .card {
-  border-color: #dfe2e7;
+  background: #f5efe4;
+  border-color: #b9c9c5;
   border-radius: 3px;
   padding: 1.25rem;
   box-shadow: 0 1px 2px rgba(17, 24, 39, 0.04);
@@ -161,8 +162,8 @@ textarea, select { width: 100%; margin-top: 0.25rem; padding: 0.5rem; border: 1p
 .banner.caution { background: #fffbeb; border-color: #e5c875; color: #61470d; }
 .banner.danger,
 .api-status.down { background: #fff; border-color: #e4b5b1; color: #a12b24; }
-.api-status.ok { background: #fff; border-color: #c9ced6; color: #374151; }
-.api-status.checking { background: #f7f8fa; border-color: #dfe2e7; }
+.api-status.ok { background: #e2ece8; border-color: #9ebbb3; color: #244a42; }
+.api-status.checking { background: #e8eceb; border-color: #c2ccca; }
 
 input,
 textarea,
@@ -182,7 +183,7 @@ button.button { border-radius: 2px; padding: 0.55rem 0.9rem; }
 button.button.primary { background: #1f5fcc; border-color: #1f5fcc; }
 .link-button { color: #1f5fcc; }
 
-.answer-text { background: #f7f8fa; border: 1px solid #e3e6eb; border-radius: 2px; }
+.answer-text { background: #e8eeeb; border: 1px solid #bdcbc7; border-radius: 2px; }
 .pill,
 .status-pill,
 .status-submitted,
@@ -199,9 +200,9 @@ button.button.primary { background: #1f5fcc; border-color: #1f5fcc; }
 .status-rejected { color: #a12b24; border-color: #e4b5b1; }
 
 .table,
-.audit-table { border: 1px solid #dfe2e7; background: #fff; }
+.audit-table { border: 1px solid #b9c9c5; background: #f5efe4; }
 .table th,
-.audit-table th { background: #f7f8fa; color: #626875; font: 700 0.68rem "IBM Plex Mono", monospace; text-transform: uppercase; letter-spacing: 0.04em; }
+.audit-table th { background: #dce7e3; color: #455c57; font: 700 0.68rem "IBM Plex Mono", monospace; text-transform: uppercase; letter-spacing: 0.04em; }
 .table th,
 .table td,
 .audit-table th,
