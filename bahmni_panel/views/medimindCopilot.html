@@ -1,0 +1,60 @@
+<div class="medimind-copilot-panel">
+  <div ng-if="!enabled" class="mm-muted">
+    MediMind copilot is disabled in clinical app config.
+  </div>
+  <div ng-if="enabled">
+    <div class="mm-toolbar">
+      <span class="mm-status" ng-class="statusClass">{{ statusLabel }}</span>
+      <button type="button" class="mm-btn" ng-click="refresh()" ng-disabled="loading">Refresh</button>
+    </div>
+    <p class="mm-muted" ng-if="statusMessage">{{ statusMessage }}</p>
+    <p class="mm-error" ng-if="errorMessage">{{ errorMessage }}</p>
+
+    <ul class="mm-tabs">
+      <li ng-class="{active: tab === 'summary'}" ng-click="tab = 'summary'">Summary</li>
+      <li ng-class="{active: tab === 'safety'}" ng-click="tab = 'safety'">Safety</li>
+    </ul>
+
+    <div ng-show="tab === 'summary'">
+      <div class="mm-section" ng-repeat="section in summarySections">
+        <h4>{{ section.title }}</h4>
+        <div class="mm-line" ng-repeat="line in section.lines">
+          <strong>{{ line.label }}:</strong> {{ line.value }}
+          <span class="mm-source">({{ line.source }})</span>
+        </div>
+      </div>
+      <p class="mm-muted" ng-if="!summarySections.length && !loading">No summary yet.</p>
+    </div>
+
+    <div ng-show="tab === 'safety'">
+      <div class="mm-alert" ng-repeat="alert in safetyAlerts" ng-class="'sev-' + (alert.severity || 'info')">
+        <strong>{{ alert.type | uppercase }}</strong>
+        <span ng-if="alert.drug"> — {{ alert.drug }}</span>
+        <div>{{ alert.message }}</div>
+        <div class="mm-source" ng-if="alert.ruleVersion">rule {{ alert.ruleVersion }}</div>
+      </div>
+      <p class="mm-muted" ng-if="!safetyAlerts.length && !loading">No safety alerts.</p>
+    </div>
+  </div>
+</div>
+<style>
+  .medimind-copilot-panel { font-size: 13px; color: #333; }
+  .mm-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .mm-status { padding: 2px 8px; border-radius: 10px; background: #e8f5e9; color: #1b5e20; font-weight: 600; }
+  .mm-status.preparing { background: #fff8e1; color: #f57f17; }
+  .mm-status.partial { background: #fff3e0; color: #e65100; }
+  .mm-status.failed { background: #ffebee; color: #b71c1c; }
+  .mm-btn { border: 1px solid #009688; background: #fff; color: #00796b; border-radius: 4px; padding: 4px 10px; cursor: pointer; }
+  .mm-tabs { list-style: none; padding: 0; margin: 0 0 10px; display: flex; gap: 8px; border-bottom: 1px solid #ddd; }
+  .mm-tabs li { padding: 6px 10px; cursor: pointer; }
+  .mm-tabs li.active { border-bottom: 2px solid #009688; font-weight: 600; }
+  .mm-section { margin-bottom: 12px; }
+  .mm-section h4 { margin: 0 0 6px; color: #00695c; }
+  .mm-line { margin: 4px 0; line-height: 1.35; }
+  .mm-source { color: #777; font-size: 11px; }
+  .mm-muted { color: #666; font-size: 12px; }
+  .mm-error { color: #b71c1c; font-size: 12px; }
+  .mm-alert { border-left: 4px solid #9e9e9e; padding: 6px 8px; margin-bottom: 8px; background: #fafafa; }
+  .mm-alert.sev-high, .mm-alert.sev-major { border-color: #c62828; background: #ffebee; }
+  .mm-alert.sev-ok { border-color: #2e7d32; }
+</style>
