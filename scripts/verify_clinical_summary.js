@@ -62,6 +62,11 @@ assert(
   "strip EH92.0 dashed ICD label"
 );
 assert(
+  exports.diseaseDisplayName("BD74.1 --- Lower limb varicose veins") ===
+    "Lower limb varicose veins",
+  "strip BD74.1 triple-dash ICD label (SHEWANGIZAW-style)"
+);
+assert(
   exports.diseaseDisplayName("osteomyelitis") === "osteomyelitis",
   "plain name unchanged"
 );
@@ -115,6 +120,27 @@ if (src.indexOf("mm-draft-btn") >= 0 || src.indexOf("Draft ›") >= 0) {
 if (src.indexOf("mm-doc-editor") >= 0) {
   fails.push("draft textarea still present in side panel JS");
 }
+if (src.indexOf("httpsBahmniUrl") < 0 || src.indexOf("Open HTTPS for microphone") < 0) {
+  fails.push("HTTPS microphone CTA missing");
+}
+if (src.indexOf("Show SOAP fields") < 0 || src.indexOf("mm-note-soap") < 0) {
+  fails.push("Note SOAP should stay collapsed behind Show SOAP fields");
+}
+
+var varicose = exports.ruleBasedSummary(
+  {
+    diagnoses: [
+      { name: "BD74.1 --- Lower limb varicose veins" },
+      { name: "PAD" }
+    ],
+    history: { medical: [], allergies: [] },
+    medications: [],
+    vitals: {}
+  },
+  { age: 60, gender: "male" }
+);
+assert(!/BD74/i.test(varicose), "BD74.1 stripped from summary");
+assert(/Lower limb varicose veins/i.test(varicose), "varicose veins name kept");
 
 console.log("--- disc-degeneration sample ---");
 console.log(sample);

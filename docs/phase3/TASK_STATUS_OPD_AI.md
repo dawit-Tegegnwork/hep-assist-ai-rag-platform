@@ -60,7 +60,7 @@ Health today: Bahmni / API / Assess / NER / Ollama / KB = **6/6 OK** (host RAM t
 | Task | Status | Truth |
 |------|--------|-------|
 | Integrate STT with new model | **Not done** | Whisper path only — not ClinicDx MedASR. |
-| Voice input on clinical docs | **Partial** | Record buttons exist. |
+| Voice input on clinical docs | **Partial** | Record works on HTTPS `:9543` (proven getUserMedia). HTTP `:9180` blocked by browser secure-context; Note tab CTA opens HTTPS. |
 | Test transcription | **Partial** | Code path exists; not demo-hardened. |
 
 ---

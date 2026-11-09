@@ -480,16 +480,60 @@
     assessBtn.addEventListener("click", function () { askAssess(assessStatus, assessBox); });
     var recordBtn = el("button", "medimind-record", "Record");
     recordBtn.type = "button";
-    var transcript = el("p", "medimind-transcript", "Record, then the full spoken words are written into the Bahmni note. The note is the transcript, unchanged.");
-    note.appendChild(recordBtn);
-    note.appendChild(transcript);
+    var httpsMicBtn = el("button", "mm-footer-primary", "Open HTTPS for microphone");
+    httpsMicBtn.type = "button";
+    httpsMicBtn.hidden = true;
+    var transcript = el("p", "medimind-transcript", "");
+    var noteSoapToggle = el("button", "mm-footer-secondary", "Show SOAP fields");
+    noteSoapToggle.type = "button";
+    var noteSoap = el("div", "mm-note-soap");
+    noteSoap.hidden = true;
     ["subjective", "objective", "assessment", "plan"].forEach(function (name) {
       var label = el("label", null, name.charAt(0).toUpperCase() + name.slice(1));
       var box = el("textarea");
       box.dataset.field = name;
       box.rows = 3;
-      note.appendChild(label);
-      note.appendChild(box);
+      noteSoap.appendChild(label);
+      noteSoap.appendChild(box);
+    });
+    note.appendChild(recordBtn);
+    note.appendChild(httpsMicBtn);
+    note.appendChild(transcript);
+    note.appendChild(noteSoapToggle);
+    note.appendChild(noteSoap);
+    function revealNoteSoap() {
+      noteSoap.hidden = false;
+      noteSoapToggle.hidden = true;
+    }
+    noteSoapToggle.addEventListener("click", function () { revealNoteSoap(); });
+    note._mmRevealSoap = revealNoteSoap;
+    function refreshNoteMicUi() {
+      var blocked = micBlockedReason();
+      var url = httpsBahmniUrl();
+      if (blocked && url) {
+        recordBtn.textContent = "Open HTTPS for microphone";
+        recordBtn.title = blocked;
+        httpsMicBtn.hidden = false;
+        transcript.textContent =
+          "Browsers block the mic on http://…:9180. One step: open this same chart on https://…:9543 (button below), accept the certificate once, allow the mic, then press Record.";
+      } else if (blocked) {
+        recordBtn.textContent = "Record";
+        recordBtn.title = blocked;
+        httpsMicBtn.hidden = true;
+        transcript.textContent = blocked;
+      } else {
+        recordBtn.textContent = "Record";
+        recordBtn.title = "";
+        httpsMicBtn.hidden = true;
+        transcript.textContent =
+          "Record dictation into the Bahmni note (Chief Complaint). Chart findings stay on Diagnoses / Summary — SOAP fields stay hidden until you record or choose Show SOAP fields.";
+      }
+    }
+    note._mmRefreshMic = refreshNoteMicUi;
+    refreshNoteMicUi();
+    httpsMicBtn.addEventListener("click", function () {
+      var url = httpsBahmniUrl();
+      if (url) window.location.assign(url);
     });
 
     panel.appendChild(head);
@@ -540,9 +584,18 @@
     emrTab.addEventListener("click", function () { showTab("emr"); });
     summaryTab.addEventListener("click", function () { showTab("summary"); });
     safetyTab.addEventListener("click", function () { showTab("safety"); });
-    noteTab.addEventListener("click", function () { showTab("note"); });
+    noteTab.addEventListener("click", function () {
+      showTab("note");
+      if (note._mmRefreshMic) note._mmRefreshMic();
+    });
     assessTab.addEventListener("click", function () { showTab("assess"); });
-    recordBtn.addEventListener("click", function () { toggleRecording(recordBtn, transcript, note); });
+    recordBtn.addEventListener("click", function () {
+      if (micBlockedReason() && httpsBahmniUrl()) {
+        window.location.assign(httpsBahmniUrl());
+        return;
+      }
+      toggleRecording(recordBtn, transcript, note);
+    });
     emr.noteBtn.addEventListener("click", function () { showTab("note"); });
     emr.openBtn.addEventListener("click", function () { showTab("assess"); });
     emr.ackBtn.addEventListener("click", function () {
@@ -1502,18 +1555,30 @@
     return new Blob([buffer], { type: "audio/wav" });
   }
 
+  /** Same chart on Bahmni HTTPS (:9543) — required for getUserMedia on LAN IPs. */
+  function httpsBahmniUrl() {
+    var host = (location.hostname || "").trim();
+    if (!host) return "";
+    if (host === "localhost" || host === "127.0.0.1") return "";
+    if (window.isSecureContext && String(location.port || "") === "9543") return "";
+    var path = location.pathname || "/bahmni/home/";
+    var search = location.search || "";
+    var hash = location.hash || "";
+    return "https://" + host + ":9543" + path + search + hash;
+  }
+
   function micBlockedReason() {
     var host = location.hostname || "";
     var isLocal = host === "localhost" || host === "127.0.0.1";
     if (!window.isSecureContext && !isLocal) {
       var httpsHost = host || "192.168.1.28";
       return (
-        "Microphone needs HTTPS. Open Bahmni as https://" + httpsHost + ":9543 " +
-        "(not http://…:9180). Accept the certificate warning once, then allow the mic."
+        "Microphone needs a secure page. Open this chart as https://" + httpsHost + ":9543 " +
+        "(not http://…:9180), accept the certificate once, allow the mic, then press Record."
       );
     }
     if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== "function") {
-      return "This browser cannot access the microphone on this page. Use Chrome/Edge over HTTPS.";
+      return "This browser cannot access the microphone on this page. Use Chrome/Edge over HTTPS (:9543).";
     }
     if (!(window.AudioContext || window.webkitAudioContext)) {
       return "This browser cannot record audio.";
@@ -1529,7 +1594,14 @@
     }
     var blocked = micBlockedReason();
     if (blocked) {
-      transcript.textContent = blocked;
+      if (transcript) {
+        transcript.textContent = blocked;
+        var url = httpsBahmniUrl();
+        if (url) {
+          transcript.textContent =
+            blocked + " Use “Open HTTPS for microphone”, or open " + url + " then allow the mic.";
+        }
+      }
       return;
     }
     navigator.mediaDevices.getUserMedia({
@@ -1880,10 +1952,12 @@
         }
         var fill = result.data.formFill || {};
         if (noteBox) {
+          if (noteBox._mmRevealSoap) noteBox._mmRevealSoap();
           noteBox.querySelectorAll("textarea").forEach(function (box) {
             if (box.dataset.field === "subjective") box.value = result.data.transcript;
-            else if (box.dataset.field === "assessment") box.value = (fill.diagnoses || []).join(", ");
-            else if (box.dataset.field === "plan") box.value = fill.plan || "";
+            else if (box.dataset.field === "assessment") {
+              box.value = (fill.diagnoses || []).map(diseaseDisplayName).filter(Boolean).join(", ");
+            } else if (box.dataset.field === "plan") box.value = fill.plan || "";
             else box.value = "";
           });
         }

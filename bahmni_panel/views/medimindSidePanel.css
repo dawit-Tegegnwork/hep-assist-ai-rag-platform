@@ -144,6 +144,23 @@
   font-weight: 700;
   margin-bottom: 8px;
 }
+.mm-note-soap {
+  margin-top: 8px;
+  padding-top: 4px;
+  border-top: 1px solid #d7e6e4;
+}
+.mm-note-soap[hidden],
+.medimind-side-body > .mm-footer-primary[hidden],
+.medimind-side-body > .mm-footer-secondary[hidden] {
+  display: none !important;
+}
+.medimind-side-body > .mm-footer-primary,
+.medimind-side-body > .mm-footer-secondary {
+  display: inline-block;
+  width: auto;
+  margin: 0 8px 8px 0;
+  padding: 8px 12px;
+}
 .medimind-field-mic { margin: 0 0 6px 6px; background: #0f6e6e; color: #fff; border: 0; border-radius: 4px; padding: 2px 8px; cursor: pointer; font-size: 12px; }
 .medimind-field-status { display: block; color: #0f6e6e; font-size: 12px; }
 .mm-alert { border-left: 4px solid #9e9e9e; background: #fafafa; padding: 8px; margin: 0 0 8px; border-radius: 0 8px 8px 0; }
